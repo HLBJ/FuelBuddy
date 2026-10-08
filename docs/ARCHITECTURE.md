@@ -29,6 +29,9 @@ database/                  driver interface + migrator + migrations
   corrupted. Shipped migrations are never edited; add a new version instead.
 - The SQLite plugin's own upgrade mechanism is not used. With no plugin upgrade statements registered, the
   plugin does not touch `user_version` (checked in its Android source), and it enables foreign keys on open.
+- **Do not add columns named `last_modified` and `sql_deleted`.** When any table has both, the Android
+  plugin silently rewrites `DELETE … WHERE` into a soft-delete `UPDATE` (its sync feature). That would break
+  deletes and the foreign-key cascade.
 - Integrity is enforced twice: service-level validation with friendly messages, plus SQL `CHECK` and
   foreign-key constraints as a last line of defence.
 
