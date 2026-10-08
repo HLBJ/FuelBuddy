@@ -1,7 +1,7 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar>
         <ion-title>Trip calculator</ion-title>
       </ion-toolbar>
     </ion-header>

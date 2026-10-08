@@ -1,7 +1,7 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar>
         <ion-title>FuelBuddy</ion-title>
         <ion-buttons slot="end">
           <ion-button router-link="/vehicles" aria-label="Manage vehicles">

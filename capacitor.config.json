@@ -1,0 +1,21 @@
+{
+  "appId": "za.co.fuelbuddy.app",
+  "appName": "FuelBuddy",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#0b6e4f",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "CapacitorSQLite": {
+      "androidIsEncryption": false
+    }
+  }
+}

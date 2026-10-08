@@ -7,15 +7,17 @@ let listener = null
 
 function setDark(isDark) {
   document.documentElement.classList.toggle('ion-palette-dark', isDark)
-  updateStatusBar(isDark)
+  updateStatusBar()
 }
 
-async function updateStatusBar(isDark) {
+// Headers and onboarding use the dark brand colour in both themes, so the status
+// bar always needs light icons (Style.Dark = light content).
+async function updateStatusBar() {
   try {
     const { Capacitor } = await import('@capacitor/core')
     if (!Capacitor.isNativePlatform()) return
     const { StatusBar, Style } = await import('@capacitor/status-bar')
-    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light })
+    await StatusBar.setStyle({ style: Style.Dark })
   } catch {
     // Status bar styling is cosmetic.
   }

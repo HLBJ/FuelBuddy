@@ -3,7 +3,7 @@
     <ion-content class="onboarding" :fullscreen="true">
       <div class="wrap">
         <div class="top">
-          <ion-button v-if="step < steps.length - 1" fill="clear" size="small" @click="finish(false)">Skip</ion-button>
+          <ion-button v-if="step < steps.length - 1" fill="clear" size="small" class="on-brand" @click="finish(false)">Skip</ion-button>
         </div>
 
         <div class="slide" :key="step" role="region" :aria-label="`Step ${step + 1} of ${steps.length}`">
@@ -16,12 +16,12 @@
           <div class="dots" aria-hidden="true">
             <span v-for="(s, i) in steps" :key="i" :class="{ active: i === step }" />
           </div>
-          <ion-button v-if="step < steps.length - 1" expand="block" @click="step += 1">Next</ion-button>
+          <ion-button v-if="step < steps.length - 1" expand="block" color="light" @click="step += 1">Next</ion-button>
           <template v-else>
-            <ion-button expand="block" @click="finish(true)">Add my first vehicle</ion-button>
-            <ion-button expand="block" fill="clear" @click="finish(false)">I'll do it later</ion-button>
+            <ion-button expand="block" color="light" @click="finish(true)">Add my first vehicle</ion-button>
+            <ion-button expand="block" fill="clear" class="on-brand" @click="finish(false)">I'll do it later</ion-button>
           </template>
-          <ion-button v-if="step > 0" fill="clear" size="small" @click="step -= 1">Back</ion-button>
+          <ion-button v-if="step > 0" fill="clear" size="small" class="on-brand" @click="step -= 1">Back</ion-button>
         </div>
       </div>
     </ion-content>
@@ -66,13 +66,15 @@ async function finish(addVehicle) {
 
 <style scoped>
 .onboarding {
-  --background: var(--ion-background-color);
+  --background: var(--fb-header-bg);
+  --color: #ffffff;
+  color: #ffffff;
 }
 .wrap {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  padding: calc(env(safe-area-inset-top) + 8px) 24px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(var(--ion-safe-area-top, 0px) + 8px) 24px calc(var(--ion-safe-area-bottom, 0px) + 24px);
   max-width: 480px;
   margin: 0 auto;
 }
@@ -96,19 +98,19 @@ async function finish(addVehicle) {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(var(--ion-color-primary-rgb), 0.12);
+  background: rgba(255, 255, 255, 0.14);
   margin-bottom: 24px;
 }
 .icon-circle ion-icon {
   font-size: 56px;
-  color: var(--ion-color-primary);
+  color: #ffffff;
 }
 h1 {
   font-size: 1.5rem;
   margin: 0 0 12px;
 }
 p {
-  color: var(--fb-text-muted);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.55;
   margin: 0;
 }
@@ -122,18 +124,25 @@ p {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--fb-border);
+  background: rgba(255, 255, 255, 0.35);
   transition: width 0.2s;
 }
 .dots span.active {
   width: 24px;
   border-radius: 4px;
-  background: var(--ion-color-primary);
+  background: #ffffff;
 }
 .bottom {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+.on-brand {
+  --color: #ffffff;
+}
+ion-button[color='light'] {
+  --ion-color-base: #ffffff !important;
+  --ion-color-contrast: #0b6e4f !important;
 }
 @keyframes fade {
   from { opacity: 0; transform: translateY(8px); }

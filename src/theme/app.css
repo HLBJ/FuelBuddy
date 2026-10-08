@@ -1,3 +1,14 @@
+/* Headers use one dark brand colour in both themes, so the status bar (drawn over
+   the header in edge-to-edge mode) always uses light icons. */
+ion-header ion-toolbar {
+  --background: var(--fb-header-bg);
+  --color: #ffffff;
+}
+ion-header ion-toolbar ion-button,
+ion-header ion-toolbar ion-back-button {
+  --color: #ffffff;
+}
+
 /* Shared layout helpers used across views. */
 ion-content.fb-page {
   --padding-bottom: calc(16px + var(--fb-ad-height));

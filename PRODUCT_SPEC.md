@@ -199,8 +199,10 @@ Browser preview: regular file download.
 
 - No analytics, telemetry, crash reporting or data upload.
 - Android permissions: only `INTERNET` (ads and billing) and those merged by the billing /
-  ads SDKs (`com.android.vending.BILLING`, `ACCESS_NETWORK_STATE`, `AD_ID`). No storage,
-  location or camera permissions.
+  ads SDKs (`com.android.vending.BILLING`, `ACCESS_NETWORK_STATE`, `AD_ID`,
+  `ACCESS_ADSERVICES_*`, plus `WAKE_LOCK` / `FOREGROUND_SERVICE` used internally by the Google
+  Mobile Ads SDK's WorkManager). No storage, location, camera or biometric permissions (the
+  SQLite plugin's unused biometric permissions are removed in the manifest).
 - In-app privacy statement explains local storage, ads and billing.
 
 ## 9. UI quality bar
