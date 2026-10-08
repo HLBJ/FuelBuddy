@@ -40,7 +40,7 @@
               </h2>
               <p>{{ describe(v) }}</p>
             </ion-label>
-            <ion-button slot="end" fill="clear" :aria-label="`Options for ${v.name}`" @click="openActions(v)">
+            <ion-button slot="end" fill="clear" class="options-button" :aria-label="`Options for ${v.name}`" @click="openActions(v)">
               <ion-icon slot="icon-only" :icon="ellipsisVertical" />
             </ion-button>
           </ion-item>
@@ -138,6 +138,11 @@ async function remove(v) {
   border: 1px solid var(--fb-border);
   border-radius: var(--fb-radius);
   padding: 0;
+}
+.options-button {
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0;
 }
 .default-badge {
   margin-left: 6px;

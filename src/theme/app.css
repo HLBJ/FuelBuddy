@@ -80,3 +80,8 @@ ion-content.fb-page {
 .fb-tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Destructive confirmation buttons (useFeedback.confirm with destructive: true). */
+ion-alert .fb-alert-danger {
+  color: var(--ion-color-danger) !important;
+}

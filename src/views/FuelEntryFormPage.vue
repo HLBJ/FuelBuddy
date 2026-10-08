@@ -248,6 +248,16 @@ onMounted(async () => {
   }
 })
 
+watch(
+  () => state.activeVehicleId,
+  async (id) => {
+    if (!isEdit.value && !form.vehicleId && id) {
+      form.vehicleId = id
+      await loadLastEntry()
+    }
+  },
+)
+
 watch(() => form.vehicleId, (id, previous) => {
   if (!isEdit.value && previous !== undefined && previous !== null) loadLastEntry()
 })
