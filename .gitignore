@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+coverage/
+*.log
+.vite/
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# environment / secrets — never commit
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+keystore.properties
+android/keystore.properties
+android/release-signing.properties
+
+# Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+android/.idea/
+android/app/release/
+*.apk
+*.aab
+!docs/**/*.apk

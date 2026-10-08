@@ -1,0 +1,45 @@
+{
+  "name": "fuelbuddy",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FuelBuddy — offline-first fuel tracking for Android",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src tests",
+    "cap:sync": "npm run build && cap sync android",
+    "android:debug": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
+    "android:release": "npm run cap:sync && cd android && gradlew.bat assembleRelease bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
+    "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
+    "@capgo/native-purchases": "^8.8.1",
+    "@ionic/vue": "^9.0.6",
+    "@ionic/vue-router": "^9.0.6",
+    "ionicons": "^8.1.0",
+    "sql.js": "^1.14.2",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}
