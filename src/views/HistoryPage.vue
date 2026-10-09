@@ -62,7 +62,7 @@
         </template>
       </template>
 
-      <ion-fab v-if="activeVehicle" slot="fixed" vertical="bottom" horizontal="end" class="fab">
+      <ion-fab v-if="activeVehicle" slot="fixed" vertical="bottom" horizontal="end">
         <ion-fab-button router-link="/entries/new" aria-label="Add fill-up">
           <ion-icon :icon="add" />
         </ion-fab-button>
@@ -178,8 +178,5 @@ watch(() => [state.activeVehicleId, state.revision], load, { immediate: true })
   text-align: center;
   font-size: 0.78rem;
   margin: 4px 16px 72px;
-}
-.fab {
-  margin-bottom: var(--fb-ad-height);
 }
 </style>

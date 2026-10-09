@@ -11,7 +11,7 @@ ion-header ion-toolbar ion-back-button {
 
 /* Shared layout helpers used across views. */
 ion-content.fb-page {
-  --padding-bottom: calc(16px + var(--fb-ad-height));
+  --padding-bottom: 16px;
 }
 
 .fb-section {
@@ -97,4 +97,12 @@ ion-tabs ion-content {
 }
 ion-content::part(scroll) {
   padding-bottom: calc(var(--padding-bottom, 0px) + var(--fb-safe-bottom));
+}
+
+/* Free tier: the banner is docked at the bottom of the screen, above the system
+   navigation bar. Lift the tab bar above it; the space under the banner keeps the
+   nav-bar inset. The tab outlet shrinks with the tab bar, so content is never covered. */
+html.fb-ad-visible ion-tab-bar {
+  padding-bottom: 0;
+  margin-bottom: calc(var(--fb-ad-height) + var(--ion-safe-area-bottom, 0px));
 }

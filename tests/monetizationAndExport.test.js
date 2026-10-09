@@ -9,7 +9,7 @@ import {
   isFeatureUnlocked,
   resolveEntitlement,
 } from '../src/services/monetizationService.js'
-import { computeBannerOffset, shouldShowAds } from '../src/services/adService.js'
+import { bannerLayout, shouldShowAds } from '../src/services/adService.js'
 import { buildCsv, escapeCsvField, exportFileName } from '../src/services/exportService.js'
 
 const config = (productId = 'fuelbuddy_pro') => ({
@@ -72,26 +72,16 @@ describe('entitlement rules', () => {
   })
 })
 
-describe('banner placement', () => {
-  it('sits directly on top of the tab bar, including its safe-area padding', () => {
-    // 812px viewport, 56px tab bar + 24px gesture-bar inset at the bottom
-    expect(computeBannerOffset({ top: 732, bottom: 812, height: 80 }, 812)).toBe(80)
-    expect(computeBannerOffset({ top: 755.2, bottom: 812, height: 56.8 }, 812)).toBe(57)
+describe('banner layout', () => {
+  it('lifts the tab bar only while a banner with a real height is showing', () => {
+    expect(bannerLayout(57)).toEqual({ visible: true, height: 57 })
+    expect(bannerLayout(56.6)).toEqual({ visible: true, height: 57 })
   })
 
-  it('subtracts the navigation-bar inset the ad plugin already measures from', () => {
-    // Android 15 device: 814px viewport, 96px tab bar of which 39px is gesture-bar inset
-    expect(computeBannerOffset({ top: 718, bottom: 814, height: 96 }, 814, 39)).toBe(57)
-    expect(computeBannerOffset({ top: 718, bottom: 814, height: 96 }, 814, 0)).toBe(96)
-    expect(computeBannerOffset({ top: 718, bottom: 814, height: 96 }, 814, NaN)).toBe(96)
-  })
-
-  it('rejects measurements taken before the tab bar is laid out', () => {
-    // Seen on an Android 15 device: top=0 produced an 814px offset (banner mid-screen)
-    expect(computeBannerOffset({ top: 0, bottom: 0, height: 0 }, 814)).toBeNull()
-    expect(computeBannerOffset({ top: 0, bottom: 56, height: 56 }, 814)).toBeNull()
-    expect(computeBannerOffset(null, 814)).toBeNull()
-    expect(computeBannerOffset({ top: 700, bottom: 756, height: 56 }, 0)).toBeNull()
+  it('treats failed, hidden or removed banners as no banner', () => {
+    for (const h of [0, -1, NaN, null, undefined, Infinity]) {
+      expect(bannerLayout(h)).toEqual({ visible: false, height: 0 })
+    }
   })
 })
 

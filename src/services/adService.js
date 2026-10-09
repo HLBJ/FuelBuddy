@@ -8,8 +8,12 @@ import { monetizationConfig } from '../config/monetization.js'
  *   policy risk). Production IDs come from configuration only.
  * - Every failure (offline, no fill, consent declined) is swallowed: ads must never
  *   affect the core app.
- * - The banner is a native overlay; its height is published through the
- *   `--fb-ad-height` CSS variable so screens can leave room for it.
+ * - Layout: the banner is docked at the very bottom of the screen, directly above
+ *   the system navigation bar (the plugin measures its margin from there), and the
+ *   tab bar is lifted above it. While a banner is showing, <html> gets the
+ *   `fb-ad-visible` class and `--fb-ad-height`; when none loads (offline, Pro, ad
+ *   blocker) both are cleared and the tab bar returns to the bottom. Ads therefore
+ *   never cover app content.
  */
 
 let admob = null
@@ -25,37 +29,20 @@ export function shouldShowAds({ isPro, isNative, config = monetizationConfig }) 
 }
 
 /**
- * Distance (CSS px) from the bottom of the screen at which the banner must sit so it
- * rests directly on top of the tab bar. Returns null while the tab bar has not been
- * laid out yet (zero height, or a position that cannot be the bottom bar) so the
- * caller can measure again instead of placing the banner mid-screen.
- * The AdMob plugin measures its margin from the top of the system navigation bar,
- * while the edge-to-edge WebView (and so the tab bar's rect) extends underneath it.
- * The bottom inset is therefore subtracted (verified on an Android 15 device:
- * without it the banner floated one nav-bar height above the tab bar).
- *
- * @param {{top: number, bottom: number, height: number}} rect tab bar bounding rect
- * @param {number} viewportHeight window.innerHeight
- * @param {number} [bottomInset] system navigation bar inset in CSS px (0 when not edge-to-edge)
+ * Layout state for a banner height reported by the ad SDK. Heights that are not a
+ * positive number (failed load, hidden, removed) mean "no banner".
+ * @returns {{ visible: boolean, height: number }}
  */
-export function computeBannerOffset(rect, viewportHeight, bottomInset = 0) {
-  if (!rect || !(rect.height > 0) || !(viewportHeight > 0)) return null
-  const offset = viewportHeight - rect.top
-  // A bottom tab bar (incl. its safe-area padding) never occupies a third of the screen.
-  if (offset < rect.height - 1 || offset > viewportHeight / 3) return null
-  const inset = Number.isFinite(bottomInset) && bottomInset > 0 ? bottomInset : 0
-  return Math.max(0, Math.round(offset - inset))
-}
-
-/** Bottom system-bar inset (CSS px) injected by Capacitor's SystemBars plugin. */
-export function readBottomInset() {
-  const value = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom')
-  const px = parseFloat(value)
-  return Number.isFinite(px) ? px : 0
+export function bannerLayout(height) {
+  const px = Number.isFinite(height) && height > 0 ? Math.round(height) : 0
+  return { visible: px > 0, height: px }
 }
 
 function setAdHeight(px) {
-  document.documentElement.style.setProperty('--fb-ad-height', `${Math.max(0, Math.round(px || 0))}px`)
+  const layout = bannerLayout(px)
+  const root = document.documentElement
+  root.style.setProperty('--fb-ad-height', `${layout.height}px`)
+  root.classList.toggle('fb-ad-visible', layout.visible)
 }
 
 async function ensureInitialised() {
@@ -93,11 +80,8 @@ async function ensureInitialised() {
   return initPromise
 }
 
-/**
- * Shows the banner above the tab bar.
- * @param {number} bottomOffset distance in px from the bottom edge (tab bar height)
- */
-export async function showBanner(bottomOffset = 0) {
+/** Shows the banner docked at the bottom of the screen, below the tab bar. */
+export async function showBanner() {
   try {
     if (!(await ensureInitialised())) return
     const { AdMob, BannerAdSize, BannerAdPosition } = admob
@@ -114,7 +98,7 @@ export async function showBanner(bottomOffset = 0) {
       adId: monetizationConfig.ads.bannerAdId,
       adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
-      margin: Math.round(bottomOffset),
+      margin: 0,
       isTesting: monetizationConfig.ads.useTestIds,
     })
   } catch (error) {

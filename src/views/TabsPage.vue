@@ -1,8 +1,8 @@
 <template>
   <ion-page>
-    <ion-tabs @ion-tabs-did-change="positionBanner">
+    <ion-tabs>
       <ion-router-outlet />
-      <ion-tab-bar id="fb-tab-bar" ref="tabBar" slot="bottom">
+      <ion-tab-bar id="fb-tab-bar" slot="bottom">
         <ion-tab-button tab="dashboard" href="/tabs/dashboard">
           <ion-icon :icon="speedometerOutline" aria-hidden="true" />
           <ion-label>Home</ion-label>
@@ -29,44 +29,26 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { IonIcon, IonLabel, IonPage, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, onIonViewDidEnter, onIonViewWillLeave } from '@ionic/vue'
 import { listOutline, mapOutline, settingsOutline, speedometerOutline, statsChartOutline } from 'ionicons/icons'
 import { Capacitor } from '@capacitor/core'
-import { computeBannerOffset, hideBanner, readBottomInset, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
+import { hideBanner, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
 import { useAppStore } from '../stores/appStore.js'
 
-// Banner ads (free tier only) are shown while the tab screens are visible and
-// hidden on forms, onboarding and the Pro page.
+// Banner ads (free tier only) are shown while the tab screens are visible, docked
+// below the tab bar (see adService), and hidden on forms, onboarding and the Pro page.
 const { state } = useAppStore()
-const tabBar = ref(null)
 const active = ref(false)
 const adsWanted = computed(() => shouldShowAds({ isPro: state.isPro, isNative: Capacitor.isNativePlatform() }))
 
-const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
-
-// The tab bar may not be laid out on the first frame after the page enters; measure
-// until it has real dimensions so the banner never lands mid-screen.
-async function measureBannerOffset() {
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    const el = tabBar.value?.$el
-    const offset = el ? computeBannerOffset(el.getBoundingClientRect(), window.innerHeight, readBottomInset()) : null
-    if (offset !== null) return offset
-    await nextFrame()
-  }
-  return null
-}
-
-async function positionBanner() {
-  if (!active.value || !adsWanted.value) return
-  await nextTick()
-  const offset = await measureBannerOffset()
-  if (offset !== null && active.value) showBanner(offset)
+function updateBanner() {
+  if (active.value && adsWanted.value) showBanner()
 }
 
 onIonViewDidEnter(() => {
   active.value = true
-  positionBanner()
+  updateBanner()
 })
 onIonViewWillLeave(() => {
   active.value = false
@@ -75,7 +57,7 @@ onIonViewWillLeave(() => {
 onUnmounted(() => hideBanner())
 
 watch(adsWanted, (wanted) => {
-  if (wanted) positionBanner()
+  if (wanted) updateBanner()
   else removeBanner()
 })
 </script>
