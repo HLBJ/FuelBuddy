@@ -29,15 +29,29 @@ export function shouldShowAds({ isPro, isNative, config = monetizationConfig }) 
  * rests directly on top of the tab bar. Returns null while the tab bar has not been
  * laid out yet (zero height, or a position that cannot be the bottom bar) so the
  * caller can measure again instead of placing the banner mid-screen.
+ * The AdMob plugin measures its margin from the top of the system navigation bar,
+ * while the edge-to-edge WebView (and so the tab bar's rect) extends underneath it.
+ * The bottom inset is therefore subtracted (verified on an Android 15 device:
+ * without it the banner floated one nav-bar height above the tab bar).
+ *
  * @param {{top: number, bottom: number, height: number}} rect tab bar bounding rect
  * @param {number} viewportHeight window.innerHeight
+ * @param {number} [bottomInset] system navigation bar inset in CSS px (0 when not edge-to-edge)
  */
-export function computeBannerOffset(rect, viewportHeight) {
+export function computeBannerOffset(rect, viewportHeight, bottomInset = 0) {
   if (!rect || !(rect.height > 0) || !(viewportHeight > 0)) return null
   const offset = viewportHeight - rect.top
   // A bottom tab bar (incl. its safe-area padding) never occupies a third of the screen.
   if (offset < rect.height - 1 || offset > viewportHeight / 3) return null
-  return Math.round(offset)
+  const inset = Number.isFinite(bottomInset) && bottomInset > 0 ? bottomInset : 0
+  return Math.max(0, Math.round(offset - inset))
+}
+
+/** Bottom system-bar inset (CSS px) injected by Capacitor's SystemBars plugin. */
+export function readBottomInset() {
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom')
+  const px = parseFloat(value)
+  return Number.isFinite(px) ? px : 0
 }
 
 function setAdHeight(px) {

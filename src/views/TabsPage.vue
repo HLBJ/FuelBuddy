@@ -33,7 +33,7 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { IonIcon, IonLabel, IonPage, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, onIonViewDidEnter, onIonViewWillLeave } from '@ionic/vue'
 import { listOutline, mapOutline, settingsOutline, speedometerOutline, statsChartOutline } from 'ionicons/icons'
 import { Capacitor } from '@capacitor/core'
-import { computeBannerOffset, hideBanner, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
+import { computeBannerOffset, hideBanner, readBottomInset, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
 import { useAppStore } from '../stores/appStore.js'
 
 // Banner ads (free tier only) are shown while the tab screens are visible and
@@ -50,7 +50,7 @@ const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
 async function measureBannerOffset() {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const el = tabBar.value?.$el
-    const offset = el ? computeBannerOffset(el.getBoundingClientRect(), window.innerHeight) : null
+    const offset = el ? computeBannerOffset(el.getBoundingClientRect(), window.innerHeight, readBottomInset()) : null
     if (offset !== null) return offset
     await nextFrame()
   }
