@@ -25,7 +25,7 @@ build is produced unsigned.
 
 ## 2. Google Play Console
 
-1. Create the app with package name `za.co.fuelbuddy.app`.
+1. Create the app with package name `coza.wacko.fuelbuddy`.
 2. **Monetize → Products → In-app products:** create a **one-time, non-consumable** product, e.g.
    `fuelbuddy_pro`, priced at **R59** (or any price you choose; the app shows Play's localized price).
 3. Complete the Data safety form. FuelBuddy collects no user data itself. Declare the AdMob SDK's
@@ -34,7 +34,7 @@ build is produced unsigned.
 
 ## 3. AdMob
 
-1. Create an AdMob app for `za.co.fuelbuddy.app` and an **adaptive banner** ad unit.
+1. Create an AdMob app for `coza.wacko.fuelbuddy` and an **adaptive banner** ad unit.
 2. Configure the GDPR/consent message in AdMob → Privacy & messaging. The app already requests and shows the
    UMP consent form when Google requires it.
 

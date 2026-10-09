@@ -17,10 +17,10 @@ if (keystorePropertiesFile.exists()) {
 def admobAppId = project.findProperty('ADMOB_APP_ID') ?: 'ca-app-pub-3940256099942544~3347511713'
 
 android {
-    namespace = "za.co.fuelbuddy.app"
+    namespace = "coza.wacko.fuelbuddy"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "za.co.fuelbuddy.app"
+        applicationId "coza.wacko.fuelbuddy"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

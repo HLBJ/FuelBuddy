@@ -1,4 +1,4 @@
-package za.co.fuelbuddy.app;
+package coza.wacko.fuelbuddy;
 
 import com.getcapacitor.BridgeActivity;
 

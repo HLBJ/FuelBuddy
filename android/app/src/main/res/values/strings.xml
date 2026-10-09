@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">FuelBuddy</string>
     <string name="title_activity_main">FuelBuddy</string>
-    <string name="package_name">za.co.fuelbuddy.app</string>
-    <string name="custom_url_scheme">za.co.fuelbuddy.app</string>
+    <string name="package_name">coza.wacko.fuelbuddy</string>
+    <string name="custom_url_scheme">coza.wacko.fuelbuddy</string>
 </resources>

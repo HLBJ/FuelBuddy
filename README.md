@@ -4,7 +4,7 @@ Offline-first fuel tracking for Android. Record fill-ups per vehicle, and see fu
 cost per kilometre, monthly spending and trip cost estimates. Everything is stored on the phone in SQLite.
 There are no accounts, no server and no analytics.
 
-- **App ID:** `za.co.fuelbuddy.app`
+- **App ID:** `coza.wacko.fuelbuddy`
 - **Stack:** Ionic 9 + Vue 3 (JavaScript) + Capacitor 8 + `@capacitor-community/sqlite`
 - **Requirements:** [PRODUCT_SPEC.md](PRODUCT_SPEC.md)
 - **Release steps:** [docs/RELEASE.md](docs/RELEASE.md)

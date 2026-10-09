@@ -12,7 +12,7 @@ FuelBuddy is an offline-first Android utility that lets a driver record fuel fil
 vehicle and understand fuel consumption, cost per kilometre, spending and trip costs.
 
 - Application name: **FuelBuddy**
-- Android application ID / package: **`za.co.fuelbuddy.app`**
+- Android application ID / package: **`coza.wacko.fuelbuddy`**
 - Primary market: South Africa. Currency **ZAR** (South African Rand), metric units
   (kilometres, litres, L/100 km).
 
