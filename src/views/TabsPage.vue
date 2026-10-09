@@ -33,7 +33,7 @@ import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { IonIcon, IonLabel, IonPage, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs, onIonViewDidEnter, onIonViewWillLeave } from '@ionic/vue'
 import { listOutline, mapOutline, settingsOutline, speedometerOutline, statsChartOutline } from 'ionicons/icons'
 import { Capacitor } from '@capacitor/core'
-import { hideBanner, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
+import { computeBannerOffset, hideBanner, removeBanner, shouldShowAds, showBanner } from '../services/adService.js'
 import { useAppStore } from '../stores/appStore.js'
 
 // Banner ads (free tier only) are shown while the tab screens are visible and
@@ -43,16 +43,25 @@ const tabBar = ref(null)
 const active = ref(false)
 const adsWanted = computed(() => shouldShowAds({ isPro: state.isPro, isNative: Capacitor.isNativePlatform() }))
 
-function tabBarHeight() {
-  const el = tabBar.value?.$el
-  if (!el) return 56
-  return Math.max(0, window.innerHeight - el.getBoundingClientRect().top)
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
+
+// The tab bar may not be laid out on the first frame after the page enters; measure
+// until it has real dimensions so the banner never lands mid-screen.
+async function measureBannerOffset() {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const el = tabBar.value?.$el
+    const offset = el ? computeBannerOffset(el.getBoundingClientRect(), window.innerHeight) : null
+    if (offset !== null) return offset
+    await nextFrame()
+  }
+  return null
 }
 
 async function positionBanner() {
   if (!active.value || !adsWanted.value) return
   await nextTick()
-  showBanner(tabBarHeight())
+  const offset = await measureBannerOffset()
+  if (offset !== null && active.value) showBanner(offset)
 }
 
 onIonViewDidEnter(() => {

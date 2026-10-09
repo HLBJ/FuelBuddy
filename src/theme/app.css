@@ -85,3 +85,16 @@ ion-content.fb-page {
 ion-alert .fb-alert-danger {
   color: var(--ion-color-danger) !important;
 }
+
+/* Edge-to-edge (Android 15+): pages outside the tabs have no tab bar absorbing the
+   bottom system-bar inset, so their scroll area must leave room for it. Tab pages
+   end above the tab bar, which already includes the inset. */
+ion-content {
+  --fb-safe-bottom: var(--ion-safe-area-bottom, 0px);
+}
+ion-tabs ion-content {
+  --fb-safe-bottom: 0px;
+}
+ion-content::part(scroll) {
+  padding-bottom: calc(var(--padding-bottom, 0px) + var(--fb-safe-bottom));
+}

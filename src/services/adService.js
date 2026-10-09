@@ -24,6 +24,22 @@ export function shouldShowAds({ isPro, isNative, config = monetizationConfig }) 
   return Boolean(isNative && !isPro && config.ads.enabled && config.ads.bannerAdId)
 }
 
+/**
+ * Distance (CSS px) from the bottom of the screen at which the banner must sit so it
+ * rests directly on top of the tab bar. Returns null while the tab bar has not been
+ * laid out yet (zero height, or a position that cannot be the bottom bar) so the
+ * caller can measure again instead of placing the banner mid-screen.
+ * @param {{top: number, bottom: number, height: number}} rect tab bar bounding rect
+ * @param {number} viewportHeight window.innerHeight
+ */
+export function computeBannerOffset(rect, viewportHeight) {
+  if (!rect || !(rect.height > 0) || !(viewportHeight > 0)) return null
+  const offset = viewportHeight - rect.top
+  // A bottom tab bar (incl. its safe-area padding) never occupies a third of the screen.
+  if (offset < rect.height - 1 || offset > viewportHeight / 3) return null
+  return Math.round(offset)
+}
+
 function setAdHeight(px) {
   document.documentElement.style.setProperty('--fb-ad-height', `${Math.max(0, Math.round(px || 0))}px`)
 }

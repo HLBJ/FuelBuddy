@@ -16,10 +16,26 @@ export function useFeedback() {
     return role === 'confirm'
   }
 
-  async function toast(message, color = 'dark', duration = 2200) {
-    // Sit above the tab bar when it is on screen so it never hides navigation.
+  function visibleTabBar() {
     const tabBar = document.getElementById('fb-tab-bar')
-    const anchor = tabBar && tabBar.offsetParent !== null ? tabBar : undefined
+    return tabBar && tabBar.offsetParent !== null ? tabBar : undefined
+  }
+
+  // Success toasts usually follow a save + navigate back to a tab. Wait briefly for
+  // the tab bar to become visible so the toast is anchored above it, not over it.
+  async function waitForTabBar(timeoutMs = 450) {
+    const start = performance.now()
+    while (performance.now() - start < timeoutMs) {
+      const bar = visibleTabBar()
+      if (bar) return bar
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    return undefined
+  }
+
+  async function toast(message, color = 'dark', duration = 2200, { waitForTabs = false } = {}) {
+    // Sit above the tab bar when it is on screen so it never hides navigation.
+    const anchor = waitForTabs ? await waitForTabBar() : visibleTabBar()
     const t = await toastController.create({ message, duration, color, position: 'bottom', positionAnchor: anchor })
     await t.present()
   }
@@ -27,7 +43,7 @@ export function useFeedback() {
   return {
     confirm,
     toast,
-    success: (message) => toast(message, 'success'),
+    success: (message) => toast(message, 'success', 2200, { waitForTabs: true }),
     error: (message) => toast(message, 'danger', 3500),
   }
 }

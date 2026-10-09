@@ -3,8 +3,7 @@
   "appName": "FuelBuddy",
   "webDir": "dist",
   "android": {
-    "allowMixedContent": false,
-    "webContentsDebuggingEnabled": false
+    "allowMixedContent": false
   },
   "plugins": {
     "SplashScreen": {

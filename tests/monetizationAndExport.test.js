@@ -9,7 +9,7 @@ import {
   isFeatureUnlocked,
   resolveEntitlement,
 } from '../src/services/monetizationService.js'
-import { shouldShowAds } from '../src/services/adService.js'
+import { computeBannerOffset, shouldShowAds } from '../src/services/adService.js'
 import { buildCsv, escapeCsvField, exportFileName } from '../src/services/exportService.js'
 
 const config = (productId = 'fuelbuddy_pro') => ({
@@ -69,6 +69,22 @@ describe('entitlement rules', () => {
     expect(shouldShowAds({ isPro: false, isNative: false, config: config() })).toBe(false)
     const noId = { ...config(), ads: { enabled: true, bannerAdId: '' } }
     expect(shouldShowAds({ isPro: false, isNative: true, config: noId })).toBe(false)
+  })
+})
+
+describe('banner placement', () => {
+  it('sits directly on top of the tab bar, including its safe-area padding', () => {
+    // 812px viewport, 56px tab bar + 24px gesture-bar inset at the bottom
+    expect(computeBannerOffset({ top: 732, bottom: 812, height: 80 }, 812)).toBe(80)
+    expect(computeBannerOffset({ top: 755.2, bottom: 812, height: 56.8 }, 812)).toBe(57)
+  })
+
+  it('rejects measurements taken before the tab bar is laid out', () => {
+    // Seen on an Android 15 device: top=0 produced an 814px offset (banner mid-screen)
+    expect(computeBannerOffset({ top: 0, bottom: 0, height: 0 }, 814)).toBeNull()
+    expect(computeBannerOffset({ top: 0, bottom: 56, height: 56 }, 814)).toBeNull()
+    expect(computeBannerOffset(null, 814)).toBeNull()
+    expect(computeBannerOffset({ top: 700, bottom: 756, height: 56 }, 0)).toBeNull()
   })
 })
 

@@ -30,7 +30,7 @@
         <ion-button expand="block" router-link="/vehicles/new">Add vehicle</ion-button>
       </EmptyState>
 
-      <form v-else class="fb-form" novalidate @submit.prevent="save">
+      <form v-else class="fb-form" novalidate @submit.prevent="save" @keydown.enter="advanceOnEnter">
         <ion-list lines="full">
           <ion-item>
             <ion-select
@@ -157,6 +157,7 @@ import {
 import { alertCircleOutline, carSportOutline, trashOutline } from 'ionicons/icons'
 import EmptyState from '../components/EmptyState.vue'
 import { notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
+import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
 import { useServices } from '../services/appServices.js'
 import { LIMITS } from '../services/validation.js'
 import { parseDecimal } from '../services/numberUtils.js'

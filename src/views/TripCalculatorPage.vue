@@ -9,7 +9,7 @@
     <ion-content class="fb-page">
       <VehicleSwitcher v-if="activeVehicle" />
 
-      <form class="fb-form" novalidate @submit.prevent>
+      <form class="fb-form" novalidate @submit.prevent @keydown.enter="advanceOnEnter">
         <ion-list lines="full" class="inputs">
           <ion-item>
             <ion-input
@@ -23,7 +23,7 @@
             />
           </ion-item>
           <ion-item>
-            <ion-toggle v-model="form.roundTrip" justify="space-between">Return trip (double the distance)</ion-toggle>
+            <ion-toggle v-model="form.roundTrip" justify="space-between">Return trip</ion-toggle>
           </ion-item>
           <ion-item>
             <ion-input
@@ -89,6 +89,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { IonContent, IonHeader, IonInput, IonItem, IonList, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/vue'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
 import { useAppStore } from '../stores/appStore.js'
+import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
 import { useServices } from '../services/appServices.js'
 import { estimateTrip, suggestTripInputs } from '../services/tripCalculationService.js'
 import { parseDecimal } from '../services/numberUtils.js'
