@@ -10,6 +10,7 @@ import {
   resolveEntitlement,
 } from '../src/services/monetizationService.js'
 import { bannerLayout, shouldShowAds } from '../src/services/adService.js'
+import { ADMOB_TEST_BANNER_ID, resolveAdsConfig } from '../src/config/monetization.js'
 import { buildCsv, escapeCsvField, exportFileName } from '../src/services/exportService.js'
 
 const config = (productId = 'fuelbuddy_pro') => ({
@@ -69,6 +70,26 @@ describe('entitlement rules', () => {
     expect(shouldShowAds({ isPro: false, isNative: false, config: config() })).toBe(false)
     const noId = { ...config(), ads: { enabled: true, bannerAdId: '' } }
     expect(shouldShowAds({ isPro: false, isNative: true, config: noId })).toBe(false)
+  })
+})
+
+describe('ad unit selection', () => {
+  const REAL = 'ca-app-pub-2782099330274635/4533405200'
+
+  it('uses the real banner only for an explicit production build', () => {
+    const cfg = resolveAdsConfig({ MODE: 'production', VITE_ADS_USE_TEST_IDS: 'false', VITE_ADMOB_BANNER_ID: REAL })
+    expect(cfg).toMatchObject({ useTestIds: false, bannerAdId: REAL })
+  })
+
+  it('never serves live ads from development builds', () => {
+    const dev = resolveAdsConfig({ MODE: 'development', VITE_ADS_USE_TEST_IDS: 'false', VITE_ADMOB_BANNER_ID: REAL })
+    expect(dev).toMatchObject({ useTestIds: true, bannerAdId: ADMOB_TEST_BANNER_ID })
+  })
+
+  it('falls back to test ads when real ads are not explicitly enabled or no ID is set', () => {
+    expect(resolveAdsConfig({ MODE: 'production', VITE_ADMOB_BANNER_ID: REAL }).useTestIds).toBe(true)
+    expect(resolveAdsConfig({ MODE: 'production', VITE_ADS_USE_TEST_IDS: 'false', VITE_ADMOB_BANNER_ID: '  ' }).bannerAdId).toBe(ADMOB_TEST_BANNER_ID)
+    expect(resolveAdsConfig({}).bannerAdId).toBe(ADMOB_TEST_BANNER_ID)
   })
 })
 

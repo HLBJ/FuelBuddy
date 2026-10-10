@@ -34,38 +34,36 @@ build is produced unsigned.
 
 ## 3. AdMob
 
-1. Create an AdMob app for `coza.wacko.fuelbuddy` and an **adaptive banner** ad unit.
-2. Configure the GDPR/consent message in AdMob → Privacy & messaging. The app already requests and shows the
-   UMP consent form when Google requires it.
+Done: the AdMob app (`ca-app-pub-2782099330274635~6863135200`) and adaptive banner unit
+(`ca-app-pub-2782099330274635/4533405200`) are configured. Release builds use them; debug builds always
+use Google's test IDs, so **never install a release build on your own phone to "check the ads"**. Tapping
+your own live ads is invalid traffic and can get the AdMob account suspended.
+
+Still to do in AdMob:
+1. **Privacy & messaging:** create the GDPR/consent message. The app already shows Google's UMP consent
+   form when it is required.
+2. After the app is published on Google Play, **link the AdMob app to the Play listing** (App settings).
+   Live ads are limited until AdMob has reviewed the app.
 
 ## 4. Build-time configuration
 
-Create `.env.production.local` (gitignored) from `.env.example`:
+The AdMob IDs are already in the repository (`.env.production` and `android/app/build.gradle`). They are
+public identifiers, not secrets. The only value still missing is the Pro product ID. Set it in
+`.env.production` once the product exists in Play Console:
 
 ```properties
 VITE_PLAY_PRO_PRODUCT_ID=fuelbuddy_pro
-VITE_ADMOB_BANNER_ID=ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN
-VITE_ADS_USE_TEST_IDS=false
 ```
-
-Put the AdMob **app** ID in `%USERPROFILE%\.gradle\gradle.properties` (outside the repository):
-
-```properties
-ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-```
-
-If `ADMOB_APP_ID` is missing, Gradle uses Google's **sample** app ID. That is correct for development and
-wrong for production.
 
 ## 5. Build the release bundle
 
-```bash
-npm run build && npx cap sync android
-```
+Release mode (real ads, real app ID):
 
 ```bash
-cd android && gradlew.bat bundleRelease
+npm run android:release
 ```
+
+For day-to-day development use `npm run android:debug` (test ads).
 
 Upload `android/app/build/outputs/bundle/release/app-release.aab` to an internal testing track first.
 

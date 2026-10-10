@@ -11,10 +11,11 @@ if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
 }
 
-// AdMob application ID. Defaults to Google's published SAMPLE app ID so debug builds
-// run without a real account. For the Play release pass the real ID with
-// -PADMOB_APP_ID=ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy or in ~/.gradle/gradle.properties.
-def admobAppId = project.findProperty('ADMOB_APP_ID') ?: 'ca-app-pub-3940256099942544~3347511713'
+// AdMob application IDs (public identifiers, not secrets). Debug builds use Google's
+// published SAMPLE app ID so development never serves live ads; release builds use
+// FuelBuddy's real ID (override with -PADMOB_APP_ID=... if it ever changes).
+def admobSampleAppId = 'ca-app-pub-3940256099942544~3347511713'
+def admobReleaseAppId = project.findProperty('ADMOB_APP_ID') ?: 'ca-app-pub-2782099330274635~6863135200'
 
 android {
     namespace = "coza.wacko.fuelbuddy"
@@ -25,7 +26,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
-        manifestPlaceholders = [admobAppId: admobAppId]
+        manifestPlaceholders = [admobAppId: admobSampleAppId]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -45,6 +46,7 @@ android {
     }
     buildTypes {
         release {
+            manifestPlaceholders = [admobAppId: admobReleaseAppId]
             if (keystoreProperties['storeFile']) {
                 signingConfig signingConfigs.release
             }

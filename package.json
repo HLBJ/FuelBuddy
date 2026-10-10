@@ -13,9 +13,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "cap:sync": "npm run build && cap sync android",
+    "cap:sync": "vite build --mode development && cap sync android",
     "android:debug": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
-    "android:release": "npm run cap:sync && cd android && gradlew.bat assembleRelease bundleRelease"
+    "android:release": "npm run cap:sync:release && cd android && gradlew.bat assembleRelease bundleRelease",
+    "cap:sync:release": "vite build --mode production && cap sync android"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",

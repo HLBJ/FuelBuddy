@@ -41,8 +41,11 @@ npm run build
 ```
 
 ```bash
-npx cap sync android
+npm run cap:sync
 ```
+
+This builds in development mode (Google test ads) and copies the web app into the Android project.
+Use `npm run cap:sync:release` only for Play Store builds (real ads).
 
 Debug APK (Windows; JAVA_HOME must point at JDK 21):
 
