@@ -1,0 +1,38 @@
+{
+  "format": "fuelbuddy-fuel-prices",
+  "version": 1,
+  "updated": "2026-10-15",
+  "source": "Department of Mineral and Petroleum Resources (DMPR) monthly price breakdowns and schedules; coastal 50ppm diesel from the Fuels Industry Association table. Inland = Gauteng, coastal = zone 1A. Petrol = regulated pump price; diesel = wholesale list price (pump prices are not regulated).",
+  "periods": [
+    {
+      "effective": "2026-05-06",
+      "inland": { "ulp93": 26.52, "ulp95": 26.63, "diesel50": 31.3793, "diesel500": 31.1753 },
+      "coastal": { "ulp93": 25.65, "ulp95": 25.76, "diesel50": 30.5073, "diesel500": 30.3033 }
+    },
+    {
+      "effective": "2026-06-03",
+      "inland": { "ulp93": 27.95, "ulp95": 28.06, "diesel50": 28.7597, "diesel500": 27.9257 },
+      "coastal": { "ulp93": 27.08, "ulp95": 27.19, "diesel50": 27.8877, "diesel500": 27.0537 }
+    },
+    {
+      "effective": "2026-07-01",
+      "inland": { "ulp93": 25.94, "ulp95": 26.10, "diesel50": 25.1717, "diesel500": 24.7877 },
+      "coastal": { "ulp93": 25.07, "ulp95": 25.23, "diesel50": 24.2997, "diesel500": 23.9157 }
+    },
+    {
+      "effective": "2026-08-05",
+      "inland": { "ulp93": 25.42, "ulp95": 25.58, "diesel50": 26.4061, "diesel500": 26.1721 },
+      "coastal": { "ulp93": 24.55, "ulp95": 24.71, "diesel50": 25.5341, "diesel500": 25.3001 }
+    },
+    {
+      "effective": "2026-09-02",
+      "inland": { "ulp93": 26.76, "ulp95": 26.92, "diesel50": 29.5551, "diesel500": 29.1111 },
+      "coastal": { "ulp93": 25.89, "ulp95": 26.05, "diesel50": 28.6831, "diesel500": 28.2391 }
+    },
+    {
+      "effective": "2026-10-07",
+      "inland": { "ulp93": 29.88, "ulp95": 30.25, "diesel50": 32.7989, "diesel500": 31.9549 },
+      "coastal": { "ulp93": 29.01, "ulp95": 29.38, "diesel50": 31.9269, "diesel500": 31.0829 }
+    }
+  ]
+}

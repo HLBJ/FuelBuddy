@@ -51,6 +51,14 @@ export const reminderNotifier = {
     await ln.cancel({ notifications: notificationIds(reminderId).map((id) => ({ id })) })
   },
 
+  /** Cancels every scheduled reminder notification (after deleting or restoring data). */
+  async cancelAll() {
+    const { ln } = (await plugin()) || {}
+    if (!ln) return
+    const { notifications } = await ln.getPending()
+    if (notifications.length) await ln.cancel({ notifications: notifications.map(({ id }) => ({ id })) })
+  },
+
   async sync(reminder, vehicleName) {
     const { ln } = (await plugin()) || {}
     if (!ln) return
@@ -71,6 +79,30 @@ export const reminderNotifier = {
         isExactNotification: false,
         extra: { url: `/reminders/${reminder.id}/edit` },
       })),
+    })
+  },
+}
+
+/** The single "fuel price changes tomorrow" notification (see fuelPriceService). */
+export const priceAlertNotifier = {
+  /** Replaces any scheduled price alert with `plan`, or just cancels it when plan is null. */
+  async sync(plan, { notificationId }) {
+    const { ln } = (await plugin()) || {}
+    if (!ln) return
+    await ln.cancel({ notifications: [{ id: notificationId }] })
+    if (!plan) return
+    const { display } = await ln.checkPermissions()
+    if (display !== 'granted') return
+    await ln.schedule({
+      notifications: [{
+        id: plan.id,
+        title: plan.title,
+        body: plan.body,
+        channelId: CHANNEL_ID,
+        schedule: { at: plan.at, allowWhileIdle: true },
+        isExactNotification: false,
+        extra: { url: '/tabs/dashboard' },
+      }],
     })
   },
 }

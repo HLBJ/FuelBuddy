@@ -35,6 +35,15 @@
           </ion-button>
         </div>
 
+        <PriceChangeCard
+          v-if="priceChange"
+          :change="priceChange"
+          :tank-capacity="activeVehicle.tankCapacity"
+          :currency="currency"
+        />
+
+        <FuelForecastCard v-if="forecast" :forecast="forecast" :vehicle-id="activeVehicle.id" />
+
         <!-- Reminders: urgent ones first; otherwise a gentle prompt to add one -->
         <ion-list lines="full" class="reminders">
           <ion-item v-for="r in urgentReminders" :key="r.id" button detail="false" :router-link="`/reminders/${r.id}/edit`">
@@ -140,7 +149,13 @@ import EmptyState from '../components/EmptyState.vue'
 import StatTile from '../components/StatTile.vue'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
 import FuelEntryItem from '../components/FuelEntryItem.vue'
-import { startProTrial, updateSetting, useAppStore } from '../stores/appStore.js'
+import FuelForecastCard from '../components/FuelForecastCard.vue'
+import PriceChangeCard from '../components/PriceChangeCard.vue'
+import { ALERT_MIN_CHANGE } from '../services/fuelPriceService.js'
+import { daysBetween } from '../services/dateUtils.js'
+import { forecastFuel } from '../services/fuelForecastService.js'
+import { toIsoDate } from '../services/dateUtils.js'
+import { priceChangeForVehicle, startProTrial, updateSetting, useAppStore } from '../stores/appStore.js'
 import { useRouter } from 'vue-router'
 import { shouldShowProNudge } from '../services/engagementService.js'
 import { useServices } from '../services/appServices.js'
@@ -181,6 +196,22 @@ const loadError = ref(null)
 const stats = ref(null)
 const recent = ref([])
 const segments = ref(new Map())
+const entries = ref([])
+
+// An announced price change for this vehicle's fuel in the next two weeks.
+const priceChange = computed(() => {
+  const today = toIsoDate(new Date(state.now))
+  const change = priceChangeForVehicle(activeVehicle.value, today)
+  if (!change || Math.abs(change.change) < ALERT_MIN_CHANGE || daysBetween(today, change.effective) > 14) return null
+  return change
+})
+
+// Recomputed as the clock ticks, so "fill up in 3 days" stays current.
+const forecast = computed(() =>
+  entries.value.length
+    ? forecastFuel(entries.value, { tankCapacity: activeVehicle.value?.tankCapacity, today: toIsoDate(new Date(state.now)) })
+    : null,
+)
 
 async function load() {
   const vehicle = activeVehicle.value
@@ -188,15 +219,17 @@ async function load() {
   loading.value = true
   loadError.value = null
   try {
-    const entries = await useServices().fuel.listByVehicle(vehicle.id)
-    stats.value = computeVehicleStatistics(entries)
-    segments.value = segmentsByClosingEntry(entries)
-    recent.value = entries.slice(-5).reverse()
+    const list = await useServices().fuel.listByVehicle(vehicle.id)
+    entries.value = list
+    stats.value = computeVehicleStatistics(list)
+    segments.value = segmentsByClosingEntry(list)
+    recent.value = list.slice(-5).reverse()
     const open = await useServices().reminders.upcoming(vehicle.id, vehicle.currentOdometer)
     reminderCount.value = open.length
     urgentReminders.value = open.filter((r) => r.status !== 'upcoming').slice(0, 3)
   } catch (error) {
     stats.value = null
+    entries.value = []
     loadError.value = error.message
   } finally {
     loading.value = false

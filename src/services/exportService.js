@@ -1,3 +1,4 @@
+import { saveFile } from './fileService.js'
 import { toIsoDate } from './dateUtils.js'
 import { FUEL_TYPES } from './validation.js'
 
@@ -74,29 +75,6 @@ export function exportFileName(date = new Date()) {
  * Writes the CSV and opens the platform share/save flow.
  * @returns {Promise<{ fileName: string, method: 'share'|'download' }>}
  */
-export async function exportCsv(csv, fileName = exportFileName()) {
-  const { Capacitor } = await import('@capacitor/core')
-  if (Capacitor.isNativePlatform()) {
-    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem')
-    const { Share } = await import('@capacitor/share')
-    const written = await Filesystem.writeFile({
-      path: fileName,
-      data: csv,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8,
-    })
-    await Share.share({ title: 'FuelBuddy export', files: [written.uri], dialogTitle: 'Save or share export' })
-    return { fileName, method: 'share' }
-  }
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-  return { fileName, method: 'download' }
+export function exportCsv(csv, fileName = exportFileName()) {
+  return saveFile(csv, fileName, { mimeType: 'text/csv;charset=utf-8', title: 'FuelBuddy export' })
 }

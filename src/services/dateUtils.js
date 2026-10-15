@@ -36,3 +36,20 @@ export function normaliseDateInput(value) {
   const candidate = value.slice(0, 10)
   return isValidIsoDate(candidate) ? candidate : null
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const utcDay = (iso) => {
+  const [y, m, d] = iso.split('-').map(Number)
+  return Date.UTC(y, m - 1, d)
+}
+
+/** Whole calendar days from `fromIso` to `toIso` (negative when `toIso` is earlier). */
+export function daysBetween(fromIso, toIso) {
+  return Math.round((utcDay(toIso) - utcDay(fromIso)) / DAY_MS)
+}
+
+/** `YYYY-MM-DD` that is `days` calendar days after `iso`. */
+export function addDays(iso, days) {
+  const date = new Date(utcDay(iso) + days * DAY_MS)
+  return date.toISOString().slice(0, 10)
+}

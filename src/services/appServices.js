@@ -5,6 +5,8 @@ import { createSettingsRepository } from '../repositories/settingsRepository.js'
 import { createMonetizationService, createNativeBillingAdapter } from './monetizationService.js'
 import { createReminderService } from './reminderService.js'
 import { reminderNotifier } from './notificationService.js'
+import { parseBackup, restoreBackup, shareBackup } from './backupService.js'
+import { appConfig } from '../config/appConfig.js'
 
 /**
  * Composition root: wires services to the open database. Views use these
@@ -23,14 +25,23 @@ export async function createAppServices() {
     settings,
     monetization: createMonetizationService({ billing, settings }),
     /**
-     * Settings → Delete all data: removes every vehicle and fill-up. Preferences
-     * (theme, onboarding) and the Pro purchase are kept.
+     * Settings → Delete all data: removes every vehicle with its fill-ups, reminders
+     * and trips. Preferences (theme, onboarding) and the Pro purchase are kept.
      */
     async deleteAllData() {
       await db.transaction(async (tx) => {
-        await tx.run('DELETE FROM fuel_entries')
-        await tx.run('DELETE FROM vehicles')
+        for (const table of ['logbook_years', 'trips', 'reminders', 'fuel_entries', 'vehicles']) await tx.run(`DELETE FROM ${table}`)
       })
+      await reminderNotifier.cancelAll().catch(() => {})
+    },
+    backup: {
+      share: () => shareBackup(db, { appVersion: appConfig.version }),
+      /** Replaces all data with a backup file's contents; the caller reloads the app. */
+      async restore(text) {
+        const summary = await restoreBackup(db, parseBackup(text))
+        await reminderNotifier.cancelAll().catch(() => {})
+        return summary
+      },
     },
   }
   return services

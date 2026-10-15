@@ -129,14 +129,14 @@ describe('reminder service with real SQLite', () => {
   })
 })
 
-describe('schema upgrade 1 → 2', () => {
+describe('schema upgrade from 1', () => {
   it('adds reminders to an existing database without losing data', async () => {
     const db = await createTestDb({ migrate: false })
     await runMigrations(db, migrations.slice(0, 1))
     const v = await createVehicleRepository(db).create({ name: 'Old car', fuelType: 'petrol', currentOdometer: 1000, isDefault: true })
     expect(await getSchemaVersion(db)).toBe(1)
     const result = await runMigrations(db)
-    expect(result).toMatchObject({ from: 1, to: LATEST_SCHEMA_VERSION, applied: [2] })
+    expect(result).toMatchObject({ from: 1, to: LATEST_SCHEMA_VERSION, applied: [2, 3] })
     expect((await createVehicleRepository(db).getById(v.id)).name).toBe('Old car')
     const cols = (await db.query('PRAGMA table_info(reminders)')).map((c) => c.name)
     expect(cols).toEqual(expect.arrayContaining(['vehicle_id', 'type', 'title', 'due_date', 'due_odometer', 'done_at']))

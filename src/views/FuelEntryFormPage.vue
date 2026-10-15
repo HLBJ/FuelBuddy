@@ -96,8 +96,15 @@
               placeholder="e.g. 23.45"
               :class="fieldClass('pricePerLitre')"
               :error-text="errors.pricePerLitre"
+              @ion-input="priceSource = 'user'"
             />
           </ion-item>
+          <div v-if="officialHint" class="price-hint fb-muted">
+            <span>{{ officialHint }}</span>
+            <ion-button v-if="canUseOfficial" size="small" fill="clear" @click="useOfficialPrice">
+              Use {{ formatCurrency(official.price, currency) }}
+            </ion-button>
+          </div>
 
           <ion-item lines="full" class="total-row">
             <ion-label>Total cost</ion-label>
@@ -156,7 +163,8 @@ import {
 } from '@ionic/vue'
 import { alertCircleOutline, carSportOutline, trashOutline } from 'ionicons/icons'
 import EmptyState from '../components/EmptyState.vue'
-import { notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
+import { gradeForVehicle, notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
+import { FUEL_GRADES, priceOn } from '../services/fuelPriceService.js'
 import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
 import { useServices } from '../services/appServices.js'
 import { LIMITS } from '../services/validation.js'
@@ -181,6 +189,8 @@ const submitted = ref(false)
 const errors = ref({})
 const warnings = ref({})
 const lastEntry = ref(null)
+/** Where the price came from: 'official' follows the date; 'user'/'last'/'slip' stay put. */
+const priceSource = ref(null)
 
 const form = reactive({
   vehicleId: null,
@@ -207,6 +217,35 @@ const odometerPlaceholder = computed(() =>
 const odometerHelper = computed(() =>
   !isEdit.value && lastEntry.value ? `Last fill-up: ${formatDistance(lastEntry.value.odometer)}` : '',
 )
+
+// Official SA price for this vehicle's fuel on the fill-up date.
+const official = computed(() => {
+  const grade = gradeForVehicle(selectedVehicle.value)
+  return priceOn(state.fuelPrices, { date: form.date, region: state.settings.fuelRegion, grade })
+})
+const officialHint = computed(() => {
+  const o = official.value
+  if (!o) return ''
+  const grade = FUEL_GRADES[gradeForVehicle(selectedVehicle.value)]
+  const where = state.settings.fuelRegion === 'coastal' ? 'Coastal' : 'Gauteng'
+  const price = formatCurrency(o.price, currency.value)
+  return o.regulated
+    ? `${where} ${grade.short} price on this date: ${price}. Prices vary slightly by town.`
+    : `Wholesale ${grade.label.toLowerCase()}: ${price}. Pumps charge a little more.`
+})
+const canUseOfficial = computed(() =>
+  Boolean(official.value?.regulated) && parseDecimal(form.pricePerLitre) !== official.value.price,
+)
+
+function useOfficialPrice() {
+  form.pricePerLitre = toInputValue(official.value.price)
+  priceSource.value = 'official'
+}
+
+// An official price follows the date and vehicle until the user types their own.
+watch(official, (o) => {
+  if (!isEdit.value && priceSource.value === 'official' && o?.regulated) form.pricePerLitre = toInputValue(o.price)
+})
 
 function fieldClass(field) {
   return { 'ion-invalid': Boolean(errors.value[field]), 'ion-touched': Boolean(errors.value[field]) }
@@ -240,8 +279,12 @@ onMounted(async () => {
     } else {
       form.vehicleId = state.activeVehicleId
       await loadLastEntry()
-      // Pre-fill the price from the previous fill-up; the user can change it.
-      if (lastEntry.value?.pricePerLitre) form.pricePerLitre = toInputValue(lastEntry.value.pricePerLitre)
+      // Pre-fill the official petrol price, else the previous fill-up's; the user can change it.
+      if (official.value?.regulated) useOfficialPrice()
+      else if (lastEntry.value?.pricePerLitre) {
+        form.pricePerLitre = toInputValue(lastEntry.value.pricePerLitre)
+        priceSource.value = 'last'
+      }
     }
   } catch (error) {
     feedback.error(error.message)
@@ -335,6 +378,19 @@ async function remove() {
   font-size: 0.78rem;
   margin: 2px 0 0;
   white-space: normal;
+}
+.price-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  padding: 4px 8px 0 16px;
+  line-height: 1.35;
+}
+.price-hint ion-button {
+  flex-shrink: 0;
+  margin: 0;
 }
 .field-error {
   color: var(--ion-color-danger);
