@@ -7,6 +7,15 @@
     </ion-header>
 
     <ion-content class="fb-page">
+      <ion-item button router-link="/trip/route" detail lines="none" class="planner-link">
+        <ion-icon slot="start" :icon="navigateCircleOutline" aria-hidden="true" />
+        <ion-label class="ion-text-wrap">
+          <h2>Plan a route with fuel stops</h2>
+          <p>Pick a destination, choose your stops and navigate in Google Maps. Toll plazas included.</p>
+        </ion-label>
+      </ion-item>
+
+      <div class="fb-section"><h2 class="fb-section-title">Quick cost estimate</h2></div>
       <VehicleSwitcher v-if="activeVehicle" />
 
       <form class="fb-form" novalidate @submit.prevent @keydown.enter="advanceOnEnter">
@@ -86,7 +95,8 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
-import { IonContent, IonHeader, IonInput, IonItem, IonList, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/vue'
+import { IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/vue'
+import { navigateCircleOutline } from 'ionicons/icons'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
 import { useAppStore } from '../stores/appStore.js'
 import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
@@ -205,5 +215,20 @@ function fieldClass(field) {
 .placeholder {
   font-size: 0.9rem;
   line-height: 1.45;
+}
+.planner-link {
+  margin: 12px 16px 0;
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius);
+  --background: var(--fb-surface);
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+}
+.planner-link ion-icon {
+  font-size: 34px;
+  color: var(--ion-color-primary);
+}
+.planner-link h2 {
+  font-weight: 600;
 }
 </style>

@@ -55,6 +55,33 @@ public identifiers, not secrets. The only value still missing is the Pro product
 VITE_PLAY_PRO_PRODUCT_ID=fuelbuddy_pro
 ```
 
+## 4b. Route planner (map, routing, station data)
+
+The route planner uses free OpenStreetMap services. Two of them need attention before a public release:
+
+1. **Map tiles (required).** OpenStreetMap's own tile servers forbid distributing an app that uses them.
+   Create a key with a tile provider that allows app traffic (for example MapTiler, Stadia Maps or
+   Thunderforest, all of which have free tiers) and set it in `.env.production`:
+
+   ```properties
+   VITE_MAP_TILE_URL=https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOUR_KEY
+   VITE_MAP_TILE_ATTRIBUTION=&copy; MapTiler &copy; OpenStreetMap contributors
+   ```
+2. **Routing and search.** The FOSSGIS router and Photon are community servers with fair-use limits. They are
+   fine for launch volumes. If usage grows, point `VITE_ROUTER_URL` / `VITE_GEOCODER_URL` at a hosted or
+   self-hosted OSRM/Photon.
+3. **Refresh the bundled fuel stations and toll plazas** before each release:
+
+   ```bash
+   node scripts/build-poi-dataset.mjs
+   ```
+
+   If the public Overpass servers are overloaded, pass an Overpass-style JSON export built from a Geofabrik
+   extract instead (see the script header).
+4. **Play Console data safety:** declare that *approximate/precise location* and *app activity: searches*
+   are shared with third parties (map/routing services) for app functionality, only when the route planner is
+   used, not collected by you, and not used for tracking.
+
 ## 5. Build the release bundle
 
 Release mode (real ads, real app ID):

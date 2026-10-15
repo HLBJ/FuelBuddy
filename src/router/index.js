@@ -22,6 +22,7 @@ const routes = [
   { path: '/vehicles/:id/edit', component: () => import('../views/VehicleFormPage.vue'), props: true },
   { path: '/entries/new', component: () => import('../views/FuelEntryFormPage.vue') },
   { path: '/entries/:id/edit', component: () => import('../views/FuelEntryFormPage.vue'), props: true },
+  { path: '/trip/route', component: () => import('../views/RoutePlannerPage.vue') },
   { path: '/pro', component: () => import('../views/ProPage.vue') },
   { path: '/privacy', component: () => import('../views/PrivacyPage.vue'), meta: { public: true } },
   { path: '/:pathMatch(.*)*', redirect: '/tabs/dashboard' },

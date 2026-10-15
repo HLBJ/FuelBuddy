@@ -23,11 +23,11 @@ vehicle and understand fuel consumption, cost per kilometre, spending and trip c
 | UI | Ionic Framework + Vue 3 (JavaScript, **no TypeScript**) |
 | Native runtime | Capacitor, Android platform |
 | Persistence | SQLite via `@capacitor-community/sqlite` (native) |
-| Backend / accounts / API / cloud | **None in V1** |
+| Backend / accounts / API / cloud | **None in V1** (the route planner uses public OpenStreetMap services, §6.10) |
 
 Non-negotiables:
-- Works fully offline. Internet is only used opportunistically for ads and Google Play
-  Billing; neither is required for any core feature.
+- Works fully offline. Internet is used for ads, Google Play Billing and the optional
+  online route planner (§6.10); none is required for any core feature.
 - No user accounts, no authentication, no remote database, no analytics/telemetry.
 - User vehicle and fuel data never leaves the device except when the user explicitly
   exports it.
@@ -175,6 +175,26 @@ Android: file is written to the app cache via `@capacitor/filesystem` and handed
 system share sheet via `@capacitor/share` — **no storage permissions requested**.
 Browser preview: regular file download.
 
+### 6.10 Route planner with fuel stops (added 2026-10-15, owner request)
+Free for all users. Online feature; the fuel log stays offline.
+1. The user picks a start (search, or "Use my location") and a destination (search).
+2. FuelBuddy plans the driving route (OSRM), shows it on a map with distance, drive time,
+   toll plazas on the route and a fuel/cost estimate (vehicle history or typical values;
+   toll fees not included).
+3. The app asks how many fuel stops to make (0–9), suggesting a number from the
+   vehicle's tank range (¾ of a full tank per leg) or ~400 km per leg if unknown.
+4. "Find fuel stops" matches fuel stations within 3 km of the route, picks the best
+   evenly spaced ones (closest to each target point, preferring stations on the road),
+   numbers them on the map, warns about legs longer than ¾ of the range, and lets the
+   user add/remove stops from the map or the station list.
+5. "Navigate in Google Maps" opens Google Maps with the stops as waypoints (max 9) for
+   turn-by-turn navigation. A full in-app navigator is out of scope (owner decision).
+Data: fuel stations and toll plazas are bundled in the app (OpenStreetMap extract,
+ODbL, refreshed per release with `scripts/build-poi-dataset.mjs`); search uses Photon,
+routing the FOSSGIS OSRM server, map tiles OpenStreetMap (production needs a tile
+provider that permits app use). Location permission is requested only on "Use my
+location".
+
 ## 7. Monetization
 
 | | Free | Pro |
@@ -198,10 +218,11 @@ Browser preview: regular file download.
 ## 8. Privacy & permissions
 
 - No analytics, telemetry, crash reporting or data upload.
-- Android permissions: only `INTERNET` (ads and billing) and those merged by the billing /
+- Android permissions: `INTERNET` (ads, billing, route planner), `ACCESS_COARSE_LOCATION` /
+  `ACCESS_FINE_LOCATION` (requested only for the route planner's "Use my location") and those merged by the billing /
   ads SDKs (`com.android.vending.BILLING`, `ACCESS_NETWORK_STATE`, `AD_ID`,
   `ACCESS_ADSERVICES_*`, plus `WAKE_LOCK` / `FOREGROUND_SERVICE` used internally by the Google
-  Mobile Ads SDK's WorkManager). No storage, location, camera or biometric permissions (the
+  Mobile Ads SDK's WorkManager). No storage, camera or biometric permissions (the
   SQLite plugin's unused biometric permissions are removed in the manifest).
 - In-app privacy statement explains local storage, ads and billing.
 
@@ -227,4 +248,5 @@ settings · 9 Export · 10 Monetization · 11 Android build & release readiness.
 ## 12. Out of scope for V1
 
 Cloud sync, accounts, multiple currencies in one dataset, electric-vehicle charging,
+in-app turn-by-turn navigation, toll fee calculation,
 receipt scanning, reminders/notifications, maintenance tracking, iOS release.

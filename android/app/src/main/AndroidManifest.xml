@@ -41,8 +41,12 @@
         </provider>
     </application>
 
-    <!-- Permissions: internet only (ads + Google Play Billing). No storage, location or camera. -->
+    <!-- Permissions: internet (ads, Google Play Billing, route planner) and location, which is
+         requested only when the user taps "Use my location" in the route planner. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!-- Merged from @capacitor-community/sqlite for its optional biometric-protected
          encryption, which FuelBuddy does not use. -->

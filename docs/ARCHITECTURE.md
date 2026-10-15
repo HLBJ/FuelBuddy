@@ -76,3 +76,18 @@ database/                  driver interface + migrator + migrations
 
 - Node 24 is used (Capacitor 8 CLI requires Node ≥ 22). Ionic 9 requires vue-router 5, so route guards
   return values instead of calling `next()`.
+
+## Route planner (online)
+
+- `services/geoService.js` is the only module that talks to online map services: Photon (search),
+  OSRM/FOSSGIS (routing), device location (only when the user asks), and Google Maps hand-off via
+  `@capacitor/app-launcher`. Endpoints live in `config/maps.js`.
+- `services/routePlannerService.js` and `services/geoUtils.js` are pure and unit-tested. They cover matching
+  stations and toll booths to the route (with a grid index over route segments), choosing evenly spaced stops,
+  range warnings, and building the Google Maps URL (max 9 waypoints, the Android app's limit).
+- **Fuel stations and toll plazas are bundled** (`src/data/poi-za.json`, OpenStreetMap/ODbL, compact
+  integer coordinates) instead of being queried live. The public Overpass servers proved unreliable (all
+  returned 5xx during development), and bundling makes stop finding instant, offline and private. The file
+  is loaded lazily on first use, so it is not part of the startup bundle.
+- Turn-by-turn navigation is deliberately handed to Google Maps (owner decision). FOSSGIS routing cannot
+  exclude tolls, so no "avoid tolls" option is offered: FuelBuddy's map would disagree with Google's route.

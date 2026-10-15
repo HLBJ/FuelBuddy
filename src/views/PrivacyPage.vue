@@ -16,6 +16,17 @@
         no server and no cloud sync, and it never uploads your fuel records.
       </p>
 
+      <h2>Route planner (online)</h2>
+      <p>
+        The route planner is the only part of FuelBuddy that sends trip information off your phone. When you use it,
+        the place names you search for and the start and destination you choose are sent to OpenStreetMap community
+        services (Photon by Komoot for search, the FOSSGIS routing server for directions) and map images are loaded
+        from OpenStreetMap. If you tap "Use my location", your approximate position is used once to fill in the
+        start point; FuelBuddy does not track your location. Fuel stations and toll plazas come from data built into
+        the app. "Navigate in Google Maps" hands the route to Google Maps, under Google's privacy policy. Your fuel
+        log is never sent anywhere.
+      </p>
+
       <h2>No tracking</h2>
       <p>FuelBuddy contains no analytics, telemetry or crash-reporting services.</p>
 
@@ -49,8 +60,9 @@
 
       <h2>Permissions</h2>
       <p>
-        FuelBuddy only uses internet access (for ads and Google Play purchases). It does not request access to your
-        location, contacts, camera or files.
+        FuelBuddy uses internet access for ads, Google Play purchases and the route planner. Location is requested
+        only when you tap "Use my location" in the route planner. FuelBuddy does not access your contacts, camera
+        or files.
       </p>
     </ion-content>
   </ion-page>
