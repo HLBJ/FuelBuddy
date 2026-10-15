@@ -43,6 +43,13 @@
           <ion-label>Manage vehicles</ion-label>
           <ion-note slot="end">{{ state.vehicles.length }}</ion-note>
         </ion-item>
+        <ion-item button router-link="/reminders" detail>
+          <ion-icon slot="start" :icon="alarmOutline" aria-hidden="true" />
+          <ion-label>
+            Reminders
+            <p>Licence disc, service and tyres</p>
+          </ion-label>
+        </ion-item>
         <ion-item button :disabled="exporting" detail="false" @click="exportData">
           <ion-icon slot="start" :icon="downloadOutline" aria-hidden="true" />
           <ion-label>
@@ -56,10 +63,10 @@
       <ion-list lines="full" class="group">
         <ion-list-header><ion-label>FuelBuddy Pro</ion-label></ion-list-header>
         <ion-item button router-link="/pro" detail>
-          <ion-icon slot="start" :icon="state.isPro ? checkmarkCircle : starOutline" :color="state.isPro ? 'success' : 'secondary'" aria-hidden="true" />
+          <ion-icon slot="start" :icon="hasPro ? checkmarkCircle : starOutline" :color="hasPro ? 'success' : 'secondary'" aria-hidden="true" />
           <ion-label>
-            {{ state.isPro ? 'Pro unlocked' : 'Upgrade to Pro' }}
-            <p>{{ state.isPro ? 'Ad-free with advanced statistics. Thank you!' : 'Remove ads and unlock advanced statistics' }}</p>
+            {{ state.isPro ? 'Pro unlocked' : trial.active ? `Pro trial · ${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left` : 'Upgrade to Pro' }}
+            <p>{{ state.isPro ? 'Ad-free with advanced statistics. Thank you!' : trial.active ? 'Keep Pro for good with a one-time purchase' : trial.used ? 'Remove ads and unlock advanced statistics' : 'Try Pro free for 7 days' }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -99,7 +106,7 @@ import {
   IonSelectOption, IonSpinner, IonTitle, IonToolbar,
 } from '@ionic/vue'
 import {
-  carSportOutline, checkmarkCircle, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
+  alarmOutline, carSportOutline, checkmarkCircle, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
   trashOutline,
 } from 'ionicons/icons'
 import { appConfig } from '../config/appConfig.js'
@@ -110,7 +117,7 @@ import { useFeedback } from '../composables/useFeedback.js'
 
 const router = useRouter()
 const feedback = useFeedback()
-const { state } = useAppStore()
+const { state, hasPro, trial } = useAppStore()
 const exporting = ref(false)
 
 async function exportData() {

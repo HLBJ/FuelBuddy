@@ -54,10 +54,10 @@
 
           <div class="fb-section pro-heading">
             <h2 class="fb-section-title">Advanced statistics</h2>
-            <ion-badge v-if="!state.isPro" color="secondary">Pro</ion-badge>
+            <ion-badge v-if="!hasPro" color="secondary">Pro</ion-badge>
           </div>
 
-          <div v-if="!state.isPro" class="fb-card locked">
+          <div v-if="!hasPro" class="fb-card locked">
             <ion-icon :icon="lockClosedOutline" class="lock-icon" aria-hidden="true" />
             <h3>Unlock trends and comparisons</h3>
             <ul>
@@ -161,7 +161,7 @@ import {
   formatNumber, formatPricePerLitre,
 } from '../services/formatService.js'
 
-const { state, activeVehicle, currency } = useAppStore()
+const { state, activeVehicle, currency, hasPro } = useAppStore()
 const loading = ref(false)
 const loadError = ref(null)
 const entries = ref([])
@@ -186,7 +186,7 @@ async function load() {
   try {
     const fuel = useServices().fuel
     entries.value = await fuel.listByVehicle(vehicle.id)
-    if (state.isPro && state.vehicles.length > 1) {
+    if (hasPro.value && state.vehicles.length > 1) {
       const datasets = []
       for (const v of state.vehicles) datasets.push({ vehicle: v, entries: await fuel.listByVehicle(v.id) })
       comparison.value = compareVehicles(datasets)
@@ -200,7 +200,7 @@ async function load() {
   }
 }
 
-watch(() => [state.activeVehicleId, state.revision, state.isPro], load, { immediate: true })
+watch(() => [state.activeVehicleId, state.revision, hasPro.value], load, { immediate: true })
 </script>
 
 <style scoped>

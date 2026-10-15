@@ -38,9 +38,9 @@ import { useAppStore } from '../stores/appStore.js'
 
 // Banner ads (free tier only) are shown while the tab screens are visible, docked
 // below the tab bar (see adService), and hidden on forms, onboarding and the Pro page.
-const { state } = useAppStore()
+const { hasPro } = useAppStore()
 const active = ref(false)
-const adsWanted = computed(() => shouldShowAds({ isPro: state.isPro, isNative: Capacitor.isNativePlatform() }))
+const adsWanted = computed(() => shouldShowAds({ isPro: hasPro.value, isNative: Capacitor.isNativePlatform() }))
 
 function updateBanner() {
   if (active.value && adsWanted.value) showBanner()

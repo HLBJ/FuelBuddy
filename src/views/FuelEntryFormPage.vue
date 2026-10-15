@@ -165,6 +165,7 @@ import { calculateTotalCost } from '../services/fuelCalculationService.js'
 import { toIsoDate } from '../services/dateUtils.js'
 import { formatCurrency, formatDistance, toInputValue } from '../services/formatService.js'
 import { useFeedback } from '../composables/useFeedback.js'
+import { maybeAskForReview } from '../services/reviewService.js'
 
 const props = defineProps({ id: { type: String, default: null } })
 const router = useRouter()
@@ -292,6 +293,9 @@ async function save() {
     await notifyDataChanged()
     feedback.success(isEdit.value ? 'Fill-up updated' : 'Fill-up saved')
     router.back()
+    // After a new fill-up (not an edit), maybe ask for a Play Store rating, once the
+    // screen has settled back on the previous page.
+    if (!isEdit.value) setTimeout(() => maybeAskForReview(services), 1500)
   } catch (error) {
     if (error.errors) errors.value = error.errors
     feedback.error(error.message)

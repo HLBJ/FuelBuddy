@@ -5,6 +5,12 @@ export const SETTING_DEFAULTS = Object.freeze({
   currency: 'ZAR',
   onboardingComplete: false,
   proUnlocked: false,
+  /** ISO timestamp when the one-time 7-day Pro trial started (null = never). */
+  proTrialStartedAt: null,
+  /** ISO timestamp when the Play Store rating prompt was requested (null = never). */
+  reviewAskedAt: null,
+  /** ISO timestamp when the dashboard Pro offer was dismissed (null = never). */
+  proNudgeDismissedAt: null,
 })
 
 /**

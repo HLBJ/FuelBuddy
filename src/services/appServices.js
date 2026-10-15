@@ -3,6 +3,8 @@ import { createVehicleService } from './vehicleService.js'
 import { createFuelEntryService } from './fuelEntryService.js'
 import { createSettingsRepository } from '../repositories/settingsRepository.js'
 import { createMonetizationService, createNativeBillingAdapter } from './monetizationService.js'
+import { createReminderService } from './reminderService.js'
+import { reminderNotifier } from './notificationService.js'
 
 /**
  * Composition root: wires services to the open database. Views use these
@@ -17,6 +19,7 @@ export async function createAppServices() {
   services = {
     vehicles: createVehicleService(db),
     fuel: createFuelEntryService(db),
+    reminders: createReminderService(db, { notifier: reminderNotifier }),
     settings,
     monetization: createMonetizationService({ billing, settings }),
     /**

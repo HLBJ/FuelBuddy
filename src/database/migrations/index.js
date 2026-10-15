@@ -48,6 +48,26 @@ export const migrations = [
       )`,
     ],
   },
+  {
+    version: 2,
+    description: 'Reminders (licence disc, service, tyres) per vehicle',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS reminders (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id   INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+        type         TEXT    NOT NULL DEFAULT 'other',
+        title        TEXT    NOT NULL CHECK (length(trim(title)) > 0),
+        due_date     TEXT,
+        due_odometer REAL CHECK (due_odometer IS NULL OR due_odometer >= 0),
+        notes        TEXT,
+        done_at      TEXT,
+        created_at   TEXT    NOT NULL,
+        updated_at   TEXT    NOT NULL,
+        CHECK (due_date IS NOT NULL OR due_odometer IS NOT NULL)
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_reminders_vehicle ON reminders (vehicle_id, done_at)`,
+    ],
+  },
 ]
 
 export const LATEST_SCHEMA_VERSION = migrations[migrations.length - 1].version
