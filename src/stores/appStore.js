@@ -2,6 +2,7 @@ import { computed, reactive, readonly } from 'vue'
 import { initDatabase } from '../database/database.js'
 import { createAppServices, useServices } from '../services/appServices.js'
 import { applyTheme } from '../services/themeService.js'
+import { clearLeftoverBanner } from '../services/adService.js'
 import { SETTING_DEFAULTS } from '../repositories/settingsRepository.js'
 
 /**
@@ -26,6 +27,8 @@ export function startApp() {
     state.status = 'loading'
     startPromise = (async () => {
       try {
+        // Before any screen can show a banner, drop one left over from a previous load.
+        await clearLeftoverBanner()
         await initDatabase()
         const services = await createAppServices()
         state.settings = await services.settings.getAll()

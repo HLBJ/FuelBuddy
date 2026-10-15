@@ -133,6 +133,22 @@ export async function removeBanner() {
   }
 }
 
+/**
+ * The banner is a native view that outlives a reload of the web content (e.g. the
+ * startup "Try again" button), leaving an orphaned ad on screens that should have
+ * none. Called once at start-up; tab screens show the banner again when needed.
+ */
+export async function clearLeftoverBanner() {
+  try {
+    const { Capacitor } = await import('@capacitor/core')
+    if (!Capacitor.isNativePlatform()) return
+    const { AdMob } = await import('@capacitor-community/admob')
+    await AdMob.removeBanner()
+  } catch {
+    // No banner to remove.
+  }
+}
+
 export function disposeAds() {
   sizeListener?.remove?.()
   sizeListener = null

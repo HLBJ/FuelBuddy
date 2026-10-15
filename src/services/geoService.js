@@ -158,8 +158,21 @@ export async function getCurrentPosition() {
     if (status.location !== 'granted' && status.coarseLocation !== 'granted') {
       throw new GeoServiceError('Location permission was not granted. Search for your start point instead.')
     }
-    const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 })
-    return { lat: pos.coords.latitude, lon: pos.coords.longitude }
+    // A recent fix is fine for a trip's start point. Try the quick network-based fix
+    // first; devices without one (emulators, poor coverage) fall back to GPS.
+    const attempts = [
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10 * 60 * 1000 },
+    ]
+    for (const options of attempts) {
+      try {
+        const pos = await Geolocation.getCurrentPosition(options)
+        return { lat: pos.coords.latitude, lon: pos.coords.longitude }
+      } catch {
+        // try the next, more accurate method
+      }
+    }
+    throw new GeoServiceError("Couldn't get your location. Check that location is switched on, or search for your start point.")
   }
   if (!navigator.geolocation) throw new GeoServiceError('Location is not available on this device.')
   return new Promise((resolve, reject) => {
