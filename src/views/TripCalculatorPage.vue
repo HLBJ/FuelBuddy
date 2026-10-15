@@ -14,6 +14,13 @@
           <p>Pick a destination, choose your stops and navigate in Google Maps. Toll plazas included.</p>
         </ion-label>
       </ion-item>
+      <ion-item button router-link="/logbook" detail lines="none" class="planner-link">
+        <ion-icon slot="start" :icon="bookOutline" aria-hidden="true" />
+        <ion-label class="ion-text-wrap">
+          <h2>Travel logbook for SARS</h2>
+          <p>Log business trips and export a SARS-ready logbook at tax time.</p>
+        </ion-label>
+      </ion-item>
 
       <div class="fb-section"><h2 class="fb-section-title">Quick cost estimate</h2></div>
       <VehicleSwitcher v-if="activeVehicle" />
@@ -96,7 +103,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToggle, IonToolbar } from '@ionic/vue'
-import { navigateCircleOutline } from 'ionicons/icons'
+import { bookOutline, navigateCircleOutline } from 'ionicons/icons'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
 import { useAppStore } from '../stores/appStore.js'
 import { advanceOnEnter } from '../composables/useEnterToAdvance.js'

@@ -86,6 +86,21 @@ The route planner uses free OpenStreetMap services. Two of them need attention b
    are shared with third parties (map/routing services) for app functionality, only when the route planner is
    used, not collected by you, and not used for tracking.
 
+## 4c. Fuel prices
+
+1. Make sure `src/data/fuel-prices-za.json` includes the latest monthly prices (see
+   [FUEL_PRICES.md](FUEL_PRICES.md)).
+2. Optional but recommended: host the price file (free on GitHub Pages) and set
+   `VITE_FUEL_PRICES_URL` in `.env.production`. Without it, price-change alerts only work
+   for prices that shipped with the release.
+
+## 4d. App size
+
+Slip scanning bundles Google's on-device text recognition model, so each CPU type adds a
+few MB. Always upload an **Android App Bundle (AAB)**: Google Play then delivers only the
+files each phone needs. The debug APK, which contains every CPU type, is much larger than
+what users download.
+
 ## 5. Build the release bundle
 
 Release mode (real ads, real app ID):

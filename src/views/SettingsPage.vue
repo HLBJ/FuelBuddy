@@ -97,6 +97,13 @@
             <p>Licence disc, service and tyres</p>
           </ion-label>
         </ion-item>
+        <ion-item button router-link="/logbook" detail>
+          <ion-icon slot="start" :icon="bookOutline" aria-hidden="true" />
+          <ion-label>
+            Travel logbook
+            <p>Business trips for SARS</p>
+          </ion-label>
+        </ion-item>
         <ion-item button :disabled="busy !== null" detail="false" @click="backUp">
           <ion-icon slot="start" :icon="cloudUploadOutline" aria-hidden="true" />
           <ion-label>
@@ -130,7 +137,7 @@
           <ion-icon slot="start" :icon="hasPro ? checkmarkCircle : starOutline" :color="hasPro ? 'success' : 'secondary'" aria-hidden="true" />
           <ion-label>
             {{ state.isPro ? 'Pro unlocked' : trial.active ? `Pro trial · ${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left` : 'Upgrade to Pro' }}
-            <p>{{ state.isPro ? 'Ad-free with advanced statistics. Thank you!' : trial.active ? 'Keep Pro for good with a one-time purchase' : trial.used ? 'Remove ads and unlock advanced statistics' : 'Try Pro free for 7 days' }}</p>
+            <p>{{ state.isPro ? 'Ad-free, advanced statistics and logbook export. Thank you!' : trial.active ? 'Keep Pro for good with a one-time purchase' : trial.used ? 'No ads, advanced statistics and SARS logbook export' : 'Try Pro free for 7 days' }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -170,7 +177,7 @@ import {
   IonSelectOption, IonSpinner, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
 import {
-  alarmOutline, carSportOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
+  alarmOutline, bookOutline, carSportOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
   trashOutline,
 } from 'ionicons/icons'
 import { appConfig } from '../config/appConfig.js'

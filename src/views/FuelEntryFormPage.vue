@@ -31,6 +31,13 @@
       </EmptyState>
 
       <form v-else class="fb-form" novalidate @submit.prevent="save" @keydown.enter="advanceOnEnter">
+        <div v-if="canScan" class="scan">
+          <ion-button expand="block" fill="outline" :disabled="scanning" @click="scan">
+            <ion-spinner v-if="scanning" slot="start" name="crescent" />
+            <ion-icon v-else slot="start" :icon="scanOutline" />
+            {{ scanning ? 'Reading slip…' : 'Scan fuel slip' }}
+          </ion-button>
+        </div>
         <ion-list lines="full">
           <ion-item>
             <ion-select
@@ -161,7 +168,9 @@ import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList,
   IonPage, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
-import { alertCircleOutline, carSportOutline, trashOutline } from 'ionicons/icons'
+import { alertCircleOutline, carSportOutline, scanOutline, trashOutline } from 'ionicons/icons'
+import { Capacitor } from '@capacitor/core'
+import { scanSlip } from '../services/slipScanService.js'
 import EmptyState from '../components/EmptyState.vue'
 import { gradeForVehicle, notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
 import { FUEL_GRADES, priceOn } from '../services/fuelPriceService.js'
@@ -246,6 +255,44 @@ function useOfficialPrice() {
 watch(official, (o) => {
   if (!isEdit.value && priceSource.value === 'official' && o?.regulated) form.pricePerLitre = toInputValue(o.price)
 })
+
+// Slip scanning: photo → on-device text recognition → fill in what was found.
+const canScan = computed(() => !isEdit.value && Capacitor.isNativePlatform())
+const scanning = ref(false)
+
+async function scan() {
+  scanning.value = true
+  try {
+    const slip = await scanSlip({ today })
+    if (!slip) return // cancelled
+    const filled = []
+    if (slip.litres !== null) { form.litres = toInputValue(slip.litres); filled.push('litres') }
+    if (slip.pricePerLitre !== null) {
+      form.pricePerLitre = toInputValue(slip.pricePerLitre)
+      priceSource.value = 'slip'
+      filled.push('price')
+    }
+    if (slip.date !== null) { form.date = slip.date; filled.push('date') }
+    if (slip.station !== null && !form.fuelStation) { form.fuelStation = slip.station; filled.push('station') }
+    if (!filled.length) {
+      feedback.error("Couldn't read this slip. Try a sharp, well-lit photo, or type the numbers in.")
+      return
+    }
+    const total = calculateTotalCost(parseDecimal(form.litres), parseDecimal(form.pricePerLitre))
+    const mismatch = slip.total !== null && total !== null && Math.abs(total - slip.total) > Math.max(0.01 * slip.total, 0.1)
+    feedback.toast(
+      mismatch
+        ? `Filled in ${filled.join(', ')}. The slip total was ${formatCurrency(slip.total, currency.value)}; please check the numbers.`
+        : `Filled in ${filled.join(', ')} from the slip. Check them, then add your odometer.`,
+      mismatch ? 'warning' : 'success',
+      4000,
+    )
+  } catch (error) {
+    feedback.error(`Couldn't scan the slip: ${error.message}`)
+  } finally {
+    scanning.value = false
+  }
+}
 
 function fieldClass(field) {
   return { 'ion-invalid': Boolean(errors.value[field]), 'ion-touched': Boolean(errors.value[field]) }
@@ -378,6 +425,13 @@ async function remove() {
   font-size: 0.78rem;
   margin: 2px 0 0;
   white-space: normal;
+}
+.scan {
+  padding: 12px 16px 4px;
+}
+.scan ion-button {
+  margin: 0;
+  --border-radius: 12px;
 }
 .price-hint {
   display: flex;

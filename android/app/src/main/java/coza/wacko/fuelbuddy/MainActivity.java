@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         // Cold start from a link: expose it to Capacitor as the launch URL.
         Intent link = takePendingLink();
         if (link != null) setIntent(link);
+        registerPlugin(SlipScannerPlugin.class);
         super.onCreate(savedInstanceState);
     }
 

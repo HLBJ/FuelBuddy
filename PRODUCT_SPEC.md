@@ -195,6 +195,54 @@ routing the FOSSGIS OSRM server, map tiles OpenStreetMap (production needs a til
 provider that permits app use). Location permission is requested only on "Use my
 location".
 
+### 6.11 Engagement (added 2026-10-15)
+- **Reminders**: licence disc, service, tyres or other, per vehicle, due by date and/or
+  odometer. Date reminders notify a week before and on the day at 09:00 (local, inexact
+  alarms; no exact-alarm permission). Completing a licence-disc reminder creates next
+  year's. Urgent reminders show on the dashboard.
+- **7-day Pro trial**: one-time, in-app (Play only offers trials on subscriptions). A
+  dashboard offer appears once two consumption segments exist; dismissible.
+- **Rating prompt**: Play in-app review once, after the 5th fill-up.
+- **Home-screen widget and app shortcuts** open Add fill-up, the route planner and
+  reminders via `fuelbuddy://` links (handled by `DeepLinkActivity` so a link is never
+  replayed when Android recreates the task).
+
+### 6.12 Fuel range forecast (free)
+From measured consumption, tank capacity and average daily distance (fill-ups in the last
+120 days, at least 7 days of history) the dashboard shows fuel left, range left and the
+day to fill up (when ~15% of the tank remains). Presented as an estimate; needs the tank
+size and one measured segment.
+
+### 6.13 Official SA fuel prices (free)
+Monthly DMPR prices (inland = Gauteng, coastal = zone 1A; 93/95 pump prices, 50/500ppm
+wholesale diesel) ship with the app and can be updated from a hosted JSON file
+(`VITE_FUEL_PRICES_URL`, see docs/FUEL_PRICES.md). The fill-up form pre-fills the
+regulated petrol price for the fill-up date (user edits win) and shows the diesel
+wholesale price as a hint. An announced change shows a dashboard card with the effect on
+a full tank, and a notification at 17:00 the evening before (toggle in Settings). Region
+and grades are settings.
+
+### 6.14 Fuel slip scanning (free)
+"Scan fuel slip" on Add fill-up takes a photo (camera app) or picks one (photo picker);
+ML Kit text recognition runs on the device (bundled model, offline). The parser rebuilds
+printed rows (correcting tilt), scores numbers by label and unit, prefers a combination
+where litres × price ≈ total, and fills litres, price, date and station. Uncertain values
+are left for the user; a mismatch with the slip total is flagged. No camera or storage
+permission.
+
+### 6.15 Backup and restore (free)
+Settings → Back up data writes one JSON file (all tables + settings, schema version) and
+opens the share sheet (Google Drive, email, Files). Restore picks a file, shows what it
+contains, and replaces all data in one transaction (a bad file changes nothing). The Pro
+purchase is never restored from a file.
+
+### 6.16 SARS travel logbook (logging free, export Pro)
+Trips per vehicle: date, start/end odometer, business or private, from, destination and
+reason (destination and reason required for business trips). Grouped by SA tax year
+(1 March – end of February) with opening/closing odometer readings; totals for business,
+private (total − business when readings exist) and business share. "Save and log the
+return trip" pre-fills the way back. Export as a SARS-style PDF or CSV is a Pro feature.
+
 ## 7. Monetization
 
 | | Free | Pro |
@@ -202,6 +250,8 @@ location".
 | Fuel tracking, vehicles (unlimited), history, trip calculator, basic statistics, CSV export | ✓ | ✓ |
 | Advertising (banner) | shown | **removed** |
 | Advanced statistics (§6.7) | locked preview | **✓** |
+| Slip scanning, fuel prices and alerts, range forecast, reminders, backup, trip logging | ✓ | ✓ |
+| SARS logbook export, PDF and CSV (§6.16) | locked | **✓** |
 
 - Pro is a **one-time, non-consumable** in-app product via **Google Play Billing**.
 - Suggested price **R59 once-off**. The price shown to users comes from Google Play's
@@ -218,11 +268,14 @@ location".
 ## 8. Privacy & permissions
 
 - No analytics, telemetry, crash reporting or data upload.
-- Android permissions: `INTERNET` (ads, billing, route planner), `ACCESS_COARSE_LOCATION` /
+- Android permissions: `INTERNET` (ads, billing, route planner, fuel price file),
+  `POST_NOTIFICATIONS` + `RECEIVE_BOOT_COMPLETED` (reminders and price alerts; asked when
+  first needed; `SCHEDULE_EXACT_ALARM` removed), `ACCESS_COARSE_LOCATION` /
   `ACCESS_FINE_LOCATION` (requested only for the route planner's "Use my location") and those merged by the billing /
   ads SDKs (`com.android.vending.BILLING`, `ACCESS_NETWORK_STATE`, `AD_ID`,
   `ACCESS_ADSERVICES_*`, plus `WAKE_LOCK` / `FOREGROUND_SERVICE` used internally by the Google
-  Mobile Ads SDK's WorkManager). No storage, camera or biometric permissions (the
+  Mobile Ads SDK's WorkManager). No storage, camera or biometric permissions (slip photos
+  come from the camera app or photo picker) (the
   SQLite plugin's unused biometric permissions are removed in the manifest).
 - In-app privacy statement explains local storage, ads and billing.
 
@@ -249,4 +302,4 @@ settings · 9 Export · 10 Monetization · 11 Android build & release readiness.
 
 Cloud sync, accounts, multiple currencies in one dataset, electric-vehicle charging,
 in-app turn-by-turn navigation, toll fee calculation,
-receipt scanning, reminders/notifications, maintenance tracking, iOS release.
+maintenance cost tracking, iOS release.

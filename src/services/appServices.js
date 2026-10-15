@@ -4,6 +4,7 @@ import { createFuelEntryService } from './fuelEntryService.js'
 import { createSettingsRepository } from '../repositories/settingsRepository.js'
 import { createMonetizationService, createNativeBillingAdapter } from './monetizationService.js'
 import { createReminderService } from './reminderService.js'
+import { createLogbookService } from './logbookService.js'
 import { reminderNotifier } from './notificationService.js'
 import { parseBackup, restoreBackup, shareBackup } from './backupService.js'
 import { appConfig } from '../config/appConfig.js'
@@ -22,6 +23,7 @@ export async function createAppServices() {
     vehicles: createVehicleService(db),
     fuel: createFuelEntryService(db),
     reminders: createReminderService(db, { notifier: reminderNotifier }),
+    logbook: createLogbookService(db),
     settings,
     monetization: createMonetizationService({ billing, settings }),
     /**

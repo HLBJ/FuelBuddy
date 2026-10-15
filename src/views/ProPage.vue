@@ -37,10 +37,17 @@
             <p>12-month spending chart, consumption trends, monthly breakdown, best and worst consumption, and vehicle comparison.</p>
           </ion-label>
         </ion-item>
+        <ion-item>
+          <ion-icon slot="start" :icon="bookOutline" color="primary" aria-hidden="true" />
+          <ion-label class="ion-text-wrap">
+            <h2>SARS logbook export</h2>
+            <p>Export your travel logbook as a PDF or spreadsheet for your tax return, per vehicle and tax year.</p>
+          </ion-label>
+        </ion-item>
       </ion-list>
 
       <p class="free-note fb-muted">
-        Fuel tracking, unlimited vehicles, history, the trip calculator, basic statistics and CSV export are always free.
+        Fuel tracking, unlimited vehicles, history, slip scanning, fuel prices, reminders, the route planner, trip logging, backup and CSV export are always free.
       </p>
 
       <template v-if="!state.isPro">
@@ -74,7 +81,7 @@ import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSpinner,
   IonTitle, IonToolbar,
 } from '@ionic/vue'
-import { checkmarkCircle, eyeOffOutline, star, statsChartOutline } from 'ionicons/icons'
+import { bookOutline, checkmarkCircle, eyeOffOutline, star, statsChartOutline } from 'ionicons/icons'
 import { setPro, startProTrial, useAppStore } from '../stores/appStore.js'
 import { useServices } from '../services/appServices.js'
 import { displayPrice, ENTITLEMENT } from '../services/monetizationService.js'
@@ -103,7 +110,7 @@ function describeError(error) {
 }
 
 async function beginTrial() {
-  if (await startProTrial()) feedback.success('Pro trial started: no ads and advanced statistics for 7 days.')
+  if (await startProTrial()) feedback.success('Pro trial started: every Pro feature is yours for 7 days.')
 }
 
 async function buy() {
