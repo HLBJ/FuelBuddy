@@ -1,0 +1,54 @@
+/* FuelBuddy brand palette (light). Dark overrides live under .ion-palette-dark. */
+:root {
+  --ion-color-primary: #0b6e4f;
+  --ion-color-primary-rgb: 11, 110, 79;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0a6146;
+  --ion-color-primary-tint: #237d61;
+
+  --ion-color-secondary: #f2a541;
+  --ion-color-secondary-rgb: 242, 165, 65;
+  --ion-color-secondary-contrast: #1a1a1a;
+  --ion-color-secondary-contrast-rgb: 26, 26, 26;
+  --ion-color-secondary-shade: #d59139;
+  --ion-color-secondary-tint: #f3ae54;
+
+  --fb-surface: #ffffff;
+  --fb-surface-muted: #f3f5f4;
+  --fb-border: #e1e6e3;
+  --fb-text-muted: #5b6662;
+  --fb-ad-height: 0px;
+  --fb-header-bg: #0b6e4f;
+  --fb-radius: 14px;
+  --fb-chart-bar: var(--ion-color-primary);
+  --fb-chart-grid: #dfe5e2;
+
+  --ion-background-color: #f6f8f7;
+}
+
+.ion-palette-dark {
+  --ion-color-primary: #4cc79a;
+  --ion-color-primary-rgb: 76, 199, 154;
+  --ion-color-primary-contrast: #002618;
+  --ion-color-primary-contrast-rgb: 0, 38, 24;
+  --ion-color-primary-shade: #43af88;
+  --ion-color-primary-tint: #5ecda4;
+
+  --ion-color-secondary: #f5b862;
+  --ion-color-secondary-rgb: 245, 184, 98;
+  --ion-color-secondary-contrast: #1a1a1a;
+  --ion-color-secondary-contrast-rgb: 26, 26, 26;
+  --ion-color-secondary-shade: #d8a256;
+  --ion-color-secondary-tint: #f6bf72;
+
+  --fb-surface: #1c1f1e;
+  --fb-surface-muted: #252a28;
+  --fb-border: #323836;
+  --fb-text-muted: #a3aeaa;
+  --fb-chart-grid: #333a37;
+  --fb-header-bg: #133d2f;
+
+  --ion-background-color: #121413;
+  --ion-background-color-rgb: 18, 20, 19;
+}

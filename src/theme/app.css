@@ -1,0 +1,108 @@
+/* Headers use one dark brand colour in both themes, so the status bar (drawn over
+   the header in edge-to-edge mode) always uses light icons. */
+ion-header ion-toolbar {
+  --background: var(--fb-header-bg);
+  --color: #ffffff;
+}
+ion-header ion-toolbar ion-button,
+ion-header ion-toolbar ion-back-button {
+  --color: #ffffff;
+}
+
+/* Shared layout helpers used across views. */
+ion-content.fb-page {
+  --padding-bottom: 16px;
+}
+
+.fb-section {
+  padding: 0 16px;
+  margin: 20px 0 8px;
+}
+
+.fb-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fb-text-muted);
+  margin: 0;
+}
+
+.fb-card {
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius);
+  margin: 0 16px 12px;
+  padding: 16px;
+}
+
+.fb-muted {
+  color: var(--fb-text-muted);
+}
+
+.fb-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 16px 12px;
+}
+
+.fb-form ion-item {
+  --background: transparent;
+}
+
+.fb-form-actions {
+  padding: 16px;
+}
+
+.fb-warning-text {
+  color: var(--ion-color-warning-shade);
+  font-size: 0.8rem;
+  padding: 4px 16px 0;
+}
+
+.ion-palette-dark .fb-warning-text {
+  color: var(--ion-color-warning);
+}
+
+.fb-badge-estimate {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(var(--ion-color-secondary-rgb), 0.2);
+  color: var(--ion-text-color);
+}
+
+.fb-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Destructive confirmation buttons (useFeedback.confirm with destructive: true). */
+ion-alert .fb-alert-danger {
+  color: var(--ion-color-danger) !important;
+}
+
+/* Edge-to-edge (Android 15+): pages outside the tabs have no tab bar absorbing the
+   bottom system-bar inset, so their scroll area must leave room for it. Tab pages
+   end above the tab bar, which already includes the inset. */
+ion-content {
+  --fb-safe-bottom: var(--ion-safe-area-bottom, 0px);
+}
+ion-tabs ion-content {
+  --fb-safe-bottom: 0px;
+}
+ion-content::part(scroll) {
+  padding-bottom: calc(var(--padding-bottom, 0px) + var(--fb-safe-bottom));
+}
+
+/* Free tier: the banner is docked at the bottom of the screen, above the system
+   navigation bar. Lift the tab bar above it; the space under the banner keeps the
+   nav-bar inset. The tab outlet shrinks with the tab bar, so content is never covered. */
+html.fb-ad-visible ion-tab-bar {
+  padding-bottom: 0;
+  margin-bottom: calc(var(--fb-ad-height) + var(--ion-safe-area-bottom, 0px));
+}

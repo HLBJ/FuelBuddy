@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FuelBuddy</string>
+    <string name="title_activity_main">FuelBuddy</string>
+    <string name="package_name">coza.wacko.fuelbuddy</string>
+    <string name="custom_url_scheme">coza.wacko.fuelbuddy</string>
+</resources>
