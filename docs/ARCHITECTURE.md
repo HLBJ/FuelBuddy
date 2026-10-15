@@ -91,3 +91,8 @@ database/                  driver interface + migrator + migrations
   is loaded lazily on first use, so it is not part of the startup bundle.
 - Turn-by-turn navigation is deliberately handed to Google Maps (owner decision). FOSSGIS routing cannot
   exclude tolls, so no "avoid tolls" option is offered: FuelBuddy's map would disagree with Google's route.
+- **Place autocomplete** is offline first: `src/data/places-za.json` (13 251 SA places from GeoNames, CC BY 4.0,
+  rebuilt with `scripts/build-places-dataset.mjs`) gives instant suggestions with no network. Photon adds online
+  suggestions (streets, landmarks) from 3 letters, after a 450 ms pause, with superseded requests aborted.
+  Nominatim is used only for explicit searches and Plan route, never as-you-type, because its usage policy
+  forbids autocomplete. Plan route accepts typed text and resolves it to the best match.

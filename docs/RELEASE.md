@@ -77,7 +77,11 @@ The route planner uses free OpenStreetMap services. Two of them need attention b
    ```
 
    If the public Overpass servers are overloaded, pass an Overpass-style JSON export built from a Geofabrik
-   extract instead (see the script header).
+   extract instead (see the script header). Refresh the autocomplete place list from GeoNames' `ZA.zip` too:
+
+   ```bash
+   node scripts/build-places-dataset.mjs ZA.txt admin1CodesASCII.txt
+   ```
 4. **Play Console data safety:** declare that *approximate/precise location* and *app activity: searches*
    are shared with third parties (map/routing services) for app functionality, only when the route planner is
    used, not collected by you, and not used for tracking.

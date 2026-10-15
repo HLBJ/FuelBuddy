@@ -19,11 +19,13 @@ export class GeoServiceError extends Error {
   }
 }
 
-async function getJson(url, timeoutMs = mapsConfig.requestTimeoutMs) {
+async function getJson(url, timeoutMs = mapsConfig.requestTimeoutMs, signal) {
   let response
   try {
-    response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), headers: { Accept: 'application/json' } })
+    const timeout = AbortSignal.timeout(timeoutMs)
+    response = await fetch(url, { signal: signal ? AbortSignal.any([timeout, signal]) : timeout, headers: { Accept: 'application/json' } })
   } catch (error) {
+    if (signal?.aborted) throw error // superseded by a newer request; callers ignore this
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false
     throw new GeoServiceError(
       offline ? 'You appear to be offline. Route planning needs an internet connection.' : 'The map service did not respond. Please try again.',
@@ -52,6 +54,19 @@ export function parsePhotonResults(geojson, countryCodes = mapsConfig.countryCod
     }))
   const local = places.filter((p) => countryCodes.includes(p.countryCode))
   return local.length ? local : places
+}
+
+/**
+ * As-you-type suggestions from Photon (Nominatim's policy forbids autocomplete, so
+ * there is no fallback here — offline place suggestions cover outages).
+ * Pass an AbortSignal to cancel superseded requests.
+ */
+export async function suggestPlaces(query, { near, signal } = {}) {
+  const q = (query || '').trim()
+  if (q.length < 3) return []
+  const bias = near || mapsConfig.searchBias
+  const url = `${mapsConfig.geocoderUrl}/api/?q=${encodeURIComponent(q)}&limit=6&lang=en&lat=${bias.lat}&lon=${bias.lon}`
+  return parsePhotonResults(await getJson(url, mapsConfig.suggestTimeoutMs, signal)).map((p) => ({ ...p, source: 'online' }))
 }
 
 /** Shortens a Nominatim display name to its first few meaningful parts. */

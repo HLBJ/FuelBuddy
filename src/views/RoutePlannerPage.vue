@@ -12,10 +12,10 @@
     <ion-content class="fb-page">
       <!-- 1. Start and destination -->
       <div class="fb-card">
-        <PlaceSearch v-model="origin" label="From" allow-location />
-        <PlaceSearch v-model="destination" label="To" :near="origin" class="to" />
+        <PlaceSearch ref="fromField" v-model="origin" v-model:text="fromText" label="From" allow-location />
+        <PlaceSearch ref="toField" v-model="destination" v-model:text="toText" label="To" :near="origin" class="to" />
         <p v-if="sameError" class="error">{{ sameError }}</p>
-        <ion-button expand="block" class="plan" :disabled="!origin || !destination || planning" @click="planRoute">
+        <ion-button expand="block" class="plan" :disabled="!canPlan || planning" @click="planRoute">
           <ion-spinner v-if="planning" slot="start" name="crescent" />
           {{ route ? 'Re-plan route' : 'Plan route' }}
         </ion-button>
@@ -137,7 +137,7 @@
 
         <p class="attribution fb-muted">
           Map data © OpenStreetMap contributors. Stations and toll plazas: OpenStreetMap{{ datasetDate ? `, ${datasetDate}` : '' }}.
-          Routing: FOSSGIS / OSRM. Search: Photon by Komoot.
+          Routing: FOSSGIS / OSRM. Search: Photon by Komoot, Nominatim; place names: GeoNames (CC BY 4.0).
         </p>
       </template>
     </ion-content>
@@ -145,7 +145,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import {
   IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon,
   IonItem, IonLabel, IonList, IonPage, IonSpinner, IonTitle, IonToolbar,
@@ -177,6 +177,12 @@ const feedback = useFeedback()
 
 const origin = ref(null)
 const destination = ref(null)
+const fromText = ref('')
+const toText = ref('')
+const fromField = ref(null)
+const toField = ref(null)
+// Typed text is enough: Plan route resolves it to the best match.
+const canPlan = computed(() => (origin.value || fromText.value.trim().length >= 2) && (destination.value || toText.value.trim().length >= 2))
 const route = ref(null)
 const planning = ref(false)
 const routeError = ref('')
@@ -241,6 +247,11 @@ function resetStops() {
 async function planRoute() {
   routeError.value = ''
   sameError.value = ''
+  planning.value = true
+  const [from, to] = [await fromField.value?.resolve(), await toField.value?.resolve()]
+  await nextTick() // let the "place changed" reset run before the new route is set
+  planning.value = false
+  if (!from || !to) return
   if (isSamePlace(origin.value, destination.value)) {
     sameError.value = 'Start and destination are the same place.'
     return

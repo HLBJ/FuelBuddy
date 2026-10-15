@@ -24,4 +24,6 @@ export const mapsConfig = Object.freeze({
   requestTimeoutMs: 20000,
   /** Shorter wait for the primary geocoder so the fallback kicks in quickly. */
   geocoderTimeoutMs: 7000,
+  /** As-you-type suggestions give up quickly; offline suggestions are already shown. */
+  suggestTimeoutMs: 4000,
 })
