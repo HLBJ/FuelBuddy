@@ -146,6 +146,7 @@ export function createLogbookService(db, { today = () => toIsoDate() } = {}) {
 
   return {
     getById: (id) => trips.getById(id),
+    listTrips: (vehicleId) => trips.listByVehicle(vehicleId),
 
     /** Trips in a tax year, newest first, with the year's readings and totals. */
     async year(vehicleId, taxYear) {

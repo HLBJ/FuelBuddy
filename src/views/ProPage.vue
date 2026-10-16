@@ -38,6 +38,13 @@
           </ion-label>
         </ion-item>
         <ion-item>
+          <ion-icon slot="start" :icon="walletOutline" color="primary" aria-hidden="true" />
+          <ion-label class="ion-text-wrap">
+            <h2>True cost of driving</h2>
+            <p>Fuel plus services, tyres, insurance and tolls: your all-in cost per km and per month, by category.</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
           <ion-icon slot="start" :icon="bookOutline" color="primary" aria-hidden="true" />
           <ion-label class="ion-text-wrap">
             <h2>SARS logbook export</h2>
@@ -47,7 +54,7 @@
       </ion-list>
 
       <p class="free-note fb-muted">
-        Fuel tracking, unlimited vehicles, history, slip scanning, fuel prices, reminders, the route planner, trip logging, backup and CSV export are always free.
+        Fuel tracking, unlimited vehicles, history, slip scanning, fuel prices, reminders, the route planner, trip logging, running costs, backup and CSV export are always free.
       </p>
 
       <template v-if="!state.isPro">
@@ -81,7 +88,7 @@ import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSpinner,
   IonTitle, IonToolbar,
 } from '@ionic/vue'
-import { bookOutline, checkmarkCircle, eyeOffOutline, star, statsChartOutline } from 'ionicons/icons'
+import { bookOutline, checkmarkCircle, eyeOffOutline, star, statsChartOutline, walletOutline } from 'ionicons/icons'
 import { setPro, startProTrial, useAppStore } from '../stores/appStore.js'
 import { useServices } from '../services/appServices.js'
 import { displayPrice, ENTITLEMENT } from '../services/monetizationService.js'

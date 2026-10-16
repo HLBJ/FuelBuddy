@@ -97,6 +97,13 @@
             <p>Licence disc, service and tyres</p>
           </ion-label>
         </ion-item>
+        <ion-item button router-link="/costs" detail>
+          <ion-icon slot="start" :icon="receiptOutline" aria-hidden="true" />
+          <ion-label>
+            Running costs
+            <p>Services, tyres, insurance, tolls</p>
+          </ion-label>
+        </ion-item>
         <ion-item button router-link="/logbook" detail>
           <ion-icon slot="start" :icon="bookOutline" aria-hidden="true" />
           <ion-label>
@@ -125,7 +132,7 @@
           <ion-icon slot="start" :icon="downloadOutline" aria-hidden="true" />
           <ion-label>
             Export to CSV
-            <p>All vehicles and fill-ups, for spreadsheets</p>
+            <p>Vehicles, fill-ups and running costs, for spreadsheets</p>
           </ion-label>
           <ion-spinner v-if="busy === 'export'" slot="end" name="crescent" />
         </ion-item>
@@ -137,7 +144,7 @@
           <ion-icon slot="start" :icon="hasPro ? checkmarkCircle : starOutline" :color="hasPro ? 'success' : 'secondary'" aria-hidden="true" />
           <ion-label>
             {{ state.isPro ? 'Pro unlocked' : trial.active ? `Pro trial · ${trial.daysLeft} day${trial.daysLeft === 1 ? '' : 's'} left` : 'Upgrade to Pro' }}
-            <p>{{ state.isPro ? 'Ad-free, advanced statistics and logbook export. Thank you!' : trial.active ? 'Keep Pro for good with a one-time purchase' : trial.used ? 'No ads, advanced statistics and SARS logbook export' : 'Try Pro free for 7 days' }}</p>
+            <p>{{ state.isPro ? 'Ad-free, advanced statistics, true cost of driving and logbook export. Thank you!' : trial.active ? 'Keep Pro for good with a one-time purchase' : trial.used ? 'No ads, advanced statistics, true cost and SARS logbook' : 'Try Pro free for 7 days' }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -177,7 +184,7 @@ import {
   IonSelectOption, IonSpinner, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
 import {
-  alarmOutline, bookOutline, carSportOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
+  alarmOutline, bookOutline, carSportOutline, receiptOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
   trashOutline,
 } from 'ionicons/icons'
 import { appConfig } from '../config/appConfig.js'
@@ -242,7 +249,7 @@ async function restoreFromFile(event) {
       return
     }
     const made = summary.createdAt ? ` from ${formatDate(summary.createdAt.slice(0, 10))}` : ''
-    const contents = [plural(summary.vehicles, 'vehicle'), plural(summary.fillUps, 'fill-up'), plural(summary.reminders, 'reminder'), plural(summary.trips, 'trip')].join(', ')
+    const contents = [plural(summary.vehicles, 'vehicle'), plural(summary.fillUps, 'fill-up'), plural(summary.reminders, 'reminder'), plural(summary.trips, 'trip'), plural(summary.expenses, 'running cost')].join(', ')
     const ok = await feedback.confirm({
       header: 'Restore this backup?',
       message: `Backup${made}: ${contents}. Everything currently on this phone will be replaced.`,
@@ -265,12 +272,12 @@ async function exportData() {
   busy.value = 'export'
   try {
     const services = useServices()
-    const [vehicles, entries] = await Promise.all([services.vehicles.list(), services.fuel.listAll()])
+    const [vehicles, entries, expenses] = await Promise.all([services.vehicles.list(), services.fuel.listAll(), services.expenses.listAll()])
     if (!vehicles.length) {
       feedback.toast('Nothing to export yet — add a vehicle first.')
       return
     }
-    const { method, fileName } = await exportCsv(buildCsv(vehicles, entries, { currency: state.settings.currency }))
+    const { method, fileName } = await exportCsv(buildCsv(vehicles, entries, { currency: state.settings.currency, expenses }))
     if (method === 'download') feedback.success(`Downloaded ${fileName}`)
   } catch (error) {
     // Closing the Android share sheet without choosing a target is not an error.

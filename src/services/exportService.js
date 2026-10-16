@@ -1,6 +1,7 @@
 import { saveFile } from './fileService.js'
 import { toIsoDate } from './dateUtils.js'
 import { FUEL_TYPES } from './validation.js'
+import { categoryLabel } from './expenseService.js'
 
 /**
  * CSV export of user-owned data. `buildCsv` is pure; `exportCsv` hands the file to
@@ -55,16 +56,29 @@ function toCsvRows(columns, rows, mapper) {
  * @param {Array} entries
  * @param {object} [options]
  * @param {string} [options.currency] ISO code noted in the cost column headers
+ * @param {Array} [options.expenses] running costs; adds a third table when there are any
  * @returns {string} CSV text: a fill-ups table, a blank line, then a vehicles table
  */
-export function buildCsv(vehicles, entries, { currency = 'ZAR' } = {}) {
+export function buildCsv(vehicles, entries, { currency = 'ZAR', expenses = [] } = {}) {
   const byId = new Map((vehicles || []).map((v) => [v.id, v]))
   const entryColumns = ENTRY_COLUMNS.map(([name, get]) =>
     name === 'Price per litre' || name === 'Total cost' ? [`${name} (${currency})`, get] : [name, get],
   )
   const entryLines = toCsvRows(entryColumns, entries || [], (get, e) => get(e, byId.get(e.vehicleId)))
   const vehicleLines = toCsvRows(VEHICLE_COLUMNS, vehicles || [], (get, v) => get(v))
-  return BOM + ['FuelBuddy fill-ups', ...entryLines, '', 'FuelBuddy vehicles', ...vehicleLines].join('\r\n') + '\r\n'
+  const sections = ['FuelBuddy fill-ups', ...entryLines, '', 'FuelBuddy vehicles', ...vehicleLines]
+  if (expenses.length) {
+    const expenseColumns = [
+      ['Vehicle', (e) => byId.get(e.vehicleId)?.name ?? ''],
+      ['Date', (e) => e.date],
+      ['Category', (e) => categoryLabel(e.category)],
+      [`Amount (${currency})`, (e) => e.amount],
+      ['Odometer (km)', (e) => e.odometer ?? ''],
+      ['Description', (e) => e.description ?? ''],
+    ]
+    sections.push('', 'FuelBuddy running costs', ...toCsvRows(expenseColumns, expenses, (get, e) => get(e)))
+  }
+  return BOM + sections.join('\r\n') + '\r\n'
 }
 
 export function exportFileName(date = new Date()) {

@@ -5,6 +5,7 @@ import { createSettingsRepository } from '../repositories/settingsRepository.js'
 import { createMonetizationService, createNativeBillingAdapter } from './monetizationService.js'
 import { createReminderService } from './reminderService.js'
 import { createLogbookService } from './logbookService.js'
+import { createExpenseService } from './expenseService.js'
 import { reminderNotifier } from './notificationService.js'
 import { parseBackup, restoreBackup, shareBackup } from './backupService.js'
 import { appConfig } from '../config/appConfig.js'
@@ -24,15 +25,16 @@ export async function createAppServices() {
     fuel: createFuelEntryService(db),
     reminders: createReminderService(db, { notifier: reminderNotifier }),
     logbook: createLogbookService(db),
+    expenses: createExpenseService(db),
     settings,
     monetization: createMonetizationService({ billing, settings }),
     /**
-     * Settings → Delete all data: removes every vehicle with its fill-ups, reminders
-     * and trips. Preferences (theme, onboarding) and the Pro purchase are kept.
+     * Settings → Delete all data: removes every vehicle with its fill-ups, reminders,
+     * trips and running costs. Preferences (theme, onboarding) and the Pro purchase are kept.
      */
     async deleteAllData() {
       await db.transaction(async (tx) => {
-        for (const table of ['logbook_years', 'trips', 'reminders', 'fuel_entries', 'vehicles']) await tx.run(`DELETE FROM ${table}`)
+        for (const table of ['expenses', 'logbook_years', 'trips', 'reminders', 'fuel_entries', 'vehicles']) await tx.run(`DELETE FROM ${table}`)
       })
       await reminderNotifier.cancelAll().catch(() => {})
     },

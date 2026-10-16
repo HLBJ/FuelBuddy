@@ -136,6 +136,52 @@
               <p class="fb-muted small">— means not enough full-tank fill-ups yet.</p>
             </div>
           </template>
+
+          <div class="fb-section pro-heading">
+            <h2 class="fb-section-title">True cost of driving</h2>
+            <ion-badge v-if="!hasPro" color="secondary">Pro</ion-badge>
+          </div>
+
+          <div v-if="!hasPro" class="fb-card locked">
+            <ion-icon :icon="lockClosedOutline" class="lock-icon" aria-hidden="true" />
+            <h3>See what your car really costs</h3>
+            <ul>
+              <li>Fuel plus services, tyres, insurance, tolls and parking</li>
+              <li>All-in cost per km and per month</li>
+              <li>Where your money goes, by category</li>
+            </ul>
+            <ion-button expand="block" router-link="/pro">See FuelBuddy Pro</ion-button>
+          </div>
+
+          <template v-else-if="cost.hasData">
+            <div class="fb-grid-2">
+              <StatTile
+                label="All-in cost per km"
+                :value="formatCostPerKm(cost.costPerKm, currency)"
+                :available="cost.costPerKm !== null"
+                :hint="cost.fuelCostPerKm !== null ? `Fuel alone ${formatCostPerKm(cost.fuelCostPerKm, currency)}` : 'Needs odometer readings'"
+              />
+              <StatTile label="Per month" :value="formatCurrency(cost.perMonth, currency)" :hint="`${formatCurrency(cost.totalCost, currency)} in 12 months`" />
+            </div>
+            <div class="fb-card">
+              <h3 class="card-title">Where the money goes · last 12 months</h3>
+              <div v-for="c in cost.byCategory" :key="c.category" class="cost-row">
+                <div class="cost-label">
+                  <span>{{ c.label }}</span>
+                  <span class="fb-tabular">{{ formatCurrency(c.amount, currency) }} <span class="fb-muted">· {{ formatNumber(c.share, 0) }}%</span></span>
+                </div>
+                <div class="cost-bar"><div :class="{ fuel: c.category === 'fuel' }" :style="{ width: `${Math.max(2, c.share)}%` }" /></div>
+              </div>
+            </div>
+          </template>
+
+          <ion-item button detail router-link="/costs" lines="none" class="costs-link">
+            <ion-icon slot="start" :icon="receiptOutline" aria-hidden="true" />
+            <ion-label class="ion-text-wrap">
+              Running costs
+              <p>Services, tyres, insurance, tolls and parking for {{ activeVehicle.name }}</p>
+            </ion-label>
+          </ion-item>
         </template>
       </template>
     </ion-content>
@@ -144,8 +190,9 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { IonBadge, IonButton, IonContent, IonHeader, IonIcon, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue'
-import { lockClosedOutline, statsChartOutline, waterOutline } from 'ionicons/icons'
+import { IonBadge, IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue'
+import { lockClosedOutline, receiptOutline, statsChartOutline, waterOutline } from 'ionicons/icons'
+import { costOfDriving } from '../services/expenseService.js'
 import EmptyState from '../components/EmptyState.vue'
 import StatTile from '../components/StatTile.vue'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
@@ -166,6 +213,9 @@ const loading = ref(false)
 const loadError = ref(null)
 const entries = ref([])
 const comparison = ref([])
+const expenses = ref([])
+const trips = ref([])
+const cost = computed(() => costOfDriving({ entries: entries.value, expenses: expenses.value, trips: trips.value }))
 
 const stats = computed(() => computeVehicleStatistics(entries.value))
 const breakdown = computed(() => monthlyBreakdown(entries.value))
@@ -184,8 +234,9 @@ async function load() {
   loading.value = true
   loadError.value = null
   try {
-    const fuel = useServices().fuel
+    const { fuel, expenses: expenseService, logbook } = useServices()
     entries.value = await fuel.listByVehicle(vehicle.id)
+    ;[expenses.value, trips.value] = await Promise.all([expenseService.listByVehicle(vehicle.id), logbook.listTrips(vehicle.id)])
     if (hasPro.value && state.vehicles.length > 1) {
       const datasets = []
       for (const v of state.vehicles) datasets.push({ vehicle: v, entries: await fuel.listByVehicle(v.id) })
@@ -278,5 +329,35 @@ watch(() => [state.activeVehicleId, state.revision, hasPro.value], load, { immed
 }
 .breakdown tr:last-child td {
   border-bottom: none;
+}
+.cost-row {
+  margin: 10px 0;
+}
+.cost-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.88rem;
+  margin-bottom: 4px;
+}
+.cost-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--fb-border);
+  overflow: hidden;
+}
+.cost-bar > div {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--ion-color-secondary);
+}
+.cost-bar > div.fuel {
+  background: var(--ion-color-primary);
+}
+.costs-link {
+  margin: 0 16px 16px;
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius);
+  --background: var(--fb-surface);
 }
 </style>

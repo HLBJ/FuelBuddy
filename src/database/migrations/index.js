@@ -98,6 +98,24 @@ export const migrations = [
       )`,
     ],
   },
+  {
+    version: 4,
+    description: 'Running costs (service, tyres, insurance, tolls…) for the true cost of driving',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS expenses (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicle_id  INTEGER NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+        date        TEXT    NOT NULL,
+        category    TEXT    NOT NULL DEFAULT 'other',
+        amount      REAL    NOT NULL CHECK (amount >= 0),
+        odometer    REAL CHECK (odometer IS NULL OR odometer >= 0),
+        description TEXT,
+        created_at  TEXT    NOT NULL,
+        updated_at  TEXT    NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_expenses_vehicle_date ON expenses (vehicle_id, date)`,
+    ],
+  },
 ]
 
 export const LATEST_SCHEMA_VERSION = migrations[migrations.length - 1].version

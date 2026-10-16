@@ -18,6 +18,7 @@ async function seededDb() {
      VALUES (?, '2026-09-10', 50700, 50760, 'business', 'Client A, Stellenbosch', 'Site visit', 'x', 'x')`,
     [vehicle.id],
   )
+  await db.run("INSERT INTO expenses (vehicle_id, date, category, amount, created_at, updated_at) VALUES (?, '2026-09-20', 'tolls', 57, 'x', 'x')", [vehicle.id])
   await db.run("INSERT INTO logbook_years (vehicle_id, tax_year, opening_odometer, updated_at) VALUES (?, 2027, 49000, 'x')", [vehicle.id])
   const settings = createSettingsRepository(db)
   await settings.set('theme', 'dark')
@@ -39,7 +40,7 @@ describe('backup and restore', () => {
     const newPhone = await createTestDb()
     await createVehicleService(newPhone).create(vehicleInput({ name: 'Other car' }))
     const backup = parseBackup(file)
-    expect(summariseBackup(backup)).toEqual({ createdAt: '2026-10-15T10:00:00.000Z', vehicles: 1, fillUps: 2, reminders: 1, trips: 1 })
+    expect(summariseBackup(backup)).toEqual({ createdAt: '2026-10-15T10:00:00.000Z', vehicles: 1, fillUps: 2, reminders: 1, trips: 1, expenses: 1 })
     expect(JSON.parse(file).settings.proUnlocked).toBeUndefined()
 
     await restoreBackup(newPhone, backup)

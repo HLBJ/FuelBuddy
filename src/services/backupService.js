@@ -14,7 +14,7 @@ export const BACKUP_FORMAT = 'fuelbuddy-backup'
 export const BACKUP_VERSION = 1
 
 /** Parents before children: restore inserts in this order and deletes in reverse. */
-export const BACKUP_TABLES = Object.freeze(['vehicles', 'fuel_entries', 'reminders', 'trips', 'logbook_years'])
+export const BACKUP_TABLES = Object.freeze(['vehicles', 'fuel_entries', 'reminders', 'trips', 'logbook_years', 'expenses'])
 
 /**
  * Settings that belong to this device and are neither backed up nor replaced by a
@@ -106,6 +106,7 @@ export function summariseBackup(backup) {
     fillUps: count('fuel_entries'),
     reminders: count('reminders'),
     trips: count('trips'),
+    expenses: count('expenses'),
   }
 }
 

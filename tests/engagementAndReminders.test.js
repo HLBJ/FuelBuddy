@@ -136,7 +136,7 @@ describe('schema upgrade from 1', () => {
     const v = await createVehicleRepository(db).create({ name: 'Old car', fuelType: 'petrol', currentOdometer: 1000, isDefault: true })
     expect(await getSchemaVersion(db)).toBe(1)
     const result = await runMigrations(db)
-    expect(result).toMatchObject({ from: 1, to: LATEST_SCHEMA_VERSION, applied: [2, 3] })
+    expect(result).toMatchObject({ from: 1, to: LATEST_SCHEMA_VERSION, applied: [2, 3, 4] })
     expect((await createVehicleRepository(db).getById(v.id)).name).toBe('Old car')
     const cols = (await db.query('PRAGMA table_info(reminders)')).map((c) => c.name)
     expect(cols).toEqual(expect.arrayContaining(['vehicle_id', 'type', 'title', 'due_date', 'due_odometer', 'done_at']))
