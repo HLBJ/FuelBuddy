@@ -12,7 +12,7 @@
     <ion-content class="ion-padding privacy">
       <h2>Your data stays on your phone</h2>
       <p>
-        Vehicles, fill-ups, reminders, logbook trips and settings are stored only in a database on this device. FuelBuddy has no account,
+        Vehicles, fill-ups, running costs, reminders, logbook trips and settings are stored only in a database on this device. FuelBuddy has no account,
         no server and no cloud sync, and it never uploads your fuel records.
       </p>
 
@@ -35,8 +35,8 @@
       </p>
       <h2>Fuel prices</h2>
       <p>
-        Official fuel prices are built into the app. FuelBuddy may also download a small file of newer prices
-        from the internet; that request contains no information about you or your vehicles.
+        Official fuel prices are built into the app. FuelBuddy also downloads a small file of newer prices from
+        Google Drive; that request contains no information about you or your vehicles.
       </p>
       <h2>No tracking</h2>
       <p>FuelBuddy contains no analytics, telemetry or crash-reporting services.</p>
@@ -68,7 +68,7 @@
       </p>
 
       <h2>Deleting your data</h2>
-      <p>Settings → Delete all data removes all vehicles, fill-ups, reminders and trips. Uninstalling FuelBuddy deletes its database.</p>
+      <p>Settings → Delete all data removes all vehicles, fill-ups, reminders, trips and running costs. Uninstalling FuelBuddy deletes its database.</p>
 
       <h2>Permissions</h2>
       <p>
