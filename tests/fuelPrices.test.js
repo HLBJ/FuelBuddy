@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ALERT_MIN_CHANGE, PriceDataError, bundledPriceData, formatPriceChange, gradeForFuelType, loadFuelPrices, mergePriceData,
+  ALERT_MIN_CHANGE, PriceDataError, priceFileUrl, bundledPriceData, formatPriceChange, gradeForFuelType, loadFuelPrices, mergePriceData,
   normalisePriceData, priceAlertPlan, priceOn, upcomingChange,
 } from '../src/services/fuelPriceService.js'
 
@@ -79,25 +79,42 @@ describe('price data from the hosted file', () => {
 
   it('downloads, caches and falls back when offline', async () => {
     const settings = memorySettings()
-    const ok = async () => ({ ok: true, json: async () => file([november]) })
+    const ok = async () => file([november])
     const config = { remoteUrl: 'https://example.test/prices.json', refreshHours: 6, timeoutMs: 1000 }
     const now = Date.parse('2026-11-01T08:00:00Z')
 
-    const fresh = await loadFuelPrices(settings, { fetchImpl: ok, now, config })
+    const fresh = await loadFuelPrices(settings, { getJson: ok, now, config })
     expect(fresh.periods.at(-1).effective).toBe('2026-11-04')
     expect(settings.store.fuelPricesFetchedAt).toBe('2026-11-01T08:00:00.000Z')
 
     let calls = 0
     const offline = async () => { calls += 1; throw new Error('offline') }
-    const cached = await loadFuelPrices(settings, { fetchImpl: offline, now: now + 3_600_000, config })
+    const cached = await loadFuelPrices(settings, { getJson: offline, now: now + 3_600_000, config })
     expect(calls).toBe(0) // still fresh, no download attempted
     expect(cached.periods.at(-1).effective).toBe('2026-11-04')
 
-    const later = await loadFuelPrices(settings, { fetchImpl: offline, now: now + 7 * 3_600_000, config })
+    const later = await loadFuelPrices(settings, { getJson: offline, now: now + 7 * 3_600_000, config })
     expect(calls).toBe(1)
     expect(later.periods.at(-1).effective).toBe('2026-11-04') // cached copy still used
 
-    const noUrl = await loadFuelPrices(memorySettings(), { fetchImpl: ok, config: { ...config, remoteUrl: null } })
+    const noUrl = await loadFuelPrices(memorySettings(), { getJson: ok, config: { ...config, remoteUrl: null } })
     expect(noUrl.periods.at(-1).effective).toBe('2026-10-07')
+  })
+})
+
+describe('hosted price file URLs', () => {
+  const id = '1AbCdEfGhIjKlMnOpQrStUvWxYz012345'
+  const direct = `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`
+
+  it('turns Google Drive share links into direct downloads', () => {
+    expect(priceFileUrl(`https://drive.google.com/file/d/${id}/view?usp=sharing`)).toBe(direct)
+    expect(priceFileUrl(`https://drive.google.com/open?id=${id}`)).toBe(direct)
+    expect(priceFileUrl(`https://drive.google.com/uc?export=download&id=${id}`)).toBe(direct)
+  })
+
+  it('leaves other hosts alone', () => {
+    const pages = 'https://someone.github.io/fuelbuddy-data/fuel-prices-za.json'
+    expect(priceFileUrl(pages)).toBe(pages)
+    expect(priceFileUrl(null)).toBeNull()
   })
 })

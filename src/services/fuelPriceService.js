@@ -125,11 +125,45 @@ export function bundledPriceData() {
 }
 
 /**
+ * Direct-download form of a hosted price file URL. Google Drive "share" links point to
+ * a web page, so they are turned into Drive's download link; other URLs are unchanged.
+ */
+export function priceFileUrl(url) {
+  if (!url) return null
+  const drive = /drive\.google\.com\/(?:file\/d\/([\w-]{10,})|(?:open|uc)\?(?:[^#]*&)?id=([\w-]{10,}))/.exec(url)
+  if (!drive) return url
+  return `https://drive.usercontent.google.com/download?id=${drive[1] || drive[2]}&export=download&confirm=t`
+}
+
+/**
+ * Downloads and parses JSON. On the phone this uses Capacitor's native HTTP, which is
+ * not subject to CORS (Google Drive downloads don't allow cross-origin requests); the
+ * browser preview uses fetch.
+ */
+export async function downloadJson(url, timeoutMs) {
+  const { Capacitor, CapacitorHttp } = await import('@capacitor/core')
+  if (Capacitor.isNativePlatform()) {
+    const response = await CapacitorHttp.get({ url, connectTimeout: timeoutMs, readTimeout: timeoutMs, responseType: 'text' })
+    if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`)
+    return typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+  }
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-cache' })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return await response.json()
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
  * Current price data: what ships with the app, merged with the last downloaded copy,
  * refreshed from the hosted file when one is configured and the copy is stale.
  * Never throws; offline or a bad file simply means the cached/bundled data is used.
  */
-export async function loadFuelPrices(settings, { fetchImpl = globalThis.fetch, now = Date.now(), config = fuelPricesConfig } = {}) {
+export async function loadFuelPrices(settings, { getJson = downloadJson, now = Date.now(), config = fuelPricesConfig } = {}) {
   let data = bundledPriceData()
   let cached = null
   try {
@@ -140,15 +174,11 @@ export async function loadFuelPrices(settings, { fetchImpl = globalThis.fetch, n
   }
   data = mergePriceData(data, cached)
 
+  const url = priceFileUrl(config.remoteUrl)
   const fetchedAt = Date.parse((await settings.get('fuelPricesFetchedAt')) || '') || 0
-  if (!config.remoteUrl || !fetchImpl || now - fetchedAt < config.refreshHours * 3_600_000) return data
+  if (!url || now - fetchedAt < config.refreshHours * 3_600_000) return data
   try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), config.timeoutMs)
-    const response = await fetchImpl(config.remoteUrl, { signal: controller.signal, cache: 'no-cache' })
-    clearTimeout(timer)
-    if (!response.ok) return data
-    const json = await response.json()
+    const json = await getJson(url, config.timeoutMs)
     const remote = normalisePriceData(json)
     await settings.set('fuelPricesCache', json)
     await settings.set('fuelPricesFetchedAt', new Date(now).toISOString())

@@ -46,7 +46,30 @@ Leave out any grade you don't have. Never estimate a price.
 ## Hosting the file (free, optional)
 
 Without a hosted file, the app only knows the prices it shipped with, and it can't warn
-about an announced change. To host the file on GitHub Pages:
+about an announced change. Use either Google Drive or GitHub Pages.
+
+### Option A: Google Drive
+
+1. Upload `fuel-prices-za.json` to your Google Drive.
+2. Right-click it, choose **Share**, and set **General access** to **Anyone with the link**
+   (Viewer).
+3. Copy the link, for example `https://drive.google.com/file/d/<file-id>/view?usp=sharing`.
+   The app turns share links into direct downloads itself.
+4. Put the link in `.env.production` as `VITE_FUEL_PRICES_URL=...`, then rebuild with
+   `npm run cap:sync:release`.
+
+**Each month, replace the file, don't re-upload it.** Right-click the file, choose
+**File information → Manage versions → Upload new version**. That keeps the same link.
+Deleting the file and uploading a new one creates a new link, and every installed copy
+of the app would keep reading the old one.
+
+Google Drive may temporarily block downloads of a very popular file ("too many users have
+downloaded this file"). If FuelBuddy gets that big, move to GitHub Pages (below): set the
+new URL, release an update, and keep the Drive file updated until most users have
+updated.
+
+### Option B: GitHub Pages
+
 
 1. Create a **public** GitHub repository, for example `fuelbuddy-data`.
 2. Upload `fuel-prices-za.json` to it.
@@ -54,7 +77,6 @@ about an announced change. To host the file on GitHub Pages:
    **main / root**.
 4. After a minute the file is available at
    `https://<your-github-user>.github.io/fuelbuddy-data/fuel-prices-za.json`.
-   GitHub Pages allows cross-origin requests, which the app needs.
 5. Put that URL in `.env.production` as `VITE_FUEL_PRICES_URL=...`, then rebuild with
    `npm run cap:sync:release`.
 
