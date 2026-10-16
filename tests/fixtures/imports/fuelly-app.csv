@@ -1,0 +1,4 @@
+Type,MPG,Date,Time,Vehicle,Odometer,Filled Up,Cost/Gallon,Gallons,Total Cost,Octane,Gas Brand,Location,Tags,Payment Type,Tire Pressure,Notes,Services
+Gas,22.9,2020-01-21,10:12 AM,Focus ST,15183,Full,$4.099,7.088,$29.05,Premium [Octane: 92],Chevron,chevron,,,0,,
+Service,0,2020-02-02,5:00 PM,Focus ST,16150,,$0.00,0,$35.81,,,,,MasterCard,0,,Spark Plugs
+Gas,24.1,2020-02-10,9:41 AM,Focus ST,"16,329",Full,$3.899,7.910,$30.84,Premium [Octane: 92],Chevron,chevron,,,0,,

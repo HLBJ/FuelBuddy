@@ -17,7 +17,7 @@
         <ion-icon :icon="cloudUploadOutline" class="hero-icon" aria-hidden="true" />
         <h2>Bring your fuel history with you</h2>
         <p class="fb-muted">
-          Import a CSV export from Fuelio, Drivvo, Fuelly or Spritmonitor, a spreadsheet, or a FuelBuddy export. Your
+          Import a CSV export from another fuel app (Fuelio, Drivvo, Fuelly and more), a spreadsheet, or a FuelBuddy export. Your
           consumption and statistics are ready straight away.
         </p>
         <ion-button expand="block" :disabled="reading" @click="pickFile">
@@ -25,14 +25,16 @@
           Choose file
         </ion-button>
         <details class="help">
-          <summary>How do I export from my old app?</summary>
-          <ul>
-            <li><strong>Fuelio:</strong> Settings → Backup &amp; export → Export CSV, then share the file.</li>
-            <li><strong>Drivvo:</strong> Menu → Export → choose CSV.</li>
-            <li><strong>Fuelly:</strong> on fuelly.com, open the car → Export fuel-ups (CSV).</li>
-            <li><strong>Spreadsheet:</strong> save as CSV with a header row: Date, Odometer, Litres and Price per litre or Total.</li>
-          </ul>
-          <p class="fb-muted">Save the file to your phone or Google Drive, then choose it here.</p>
+          <summary>How do I get the file from my old app?</summary>
+          <p>
+            In your old app, look for <strong>Export</strong> or <strong>Backup</strong> (usually in Settings or the
+            menu) and choose <strong>CSV</strong>. Save the file to your phone or Google Drive, then choose it here.
+          </p>
+          <p class="fb-muted">
+            Works with exports from Fuelio, Drivvo, Fuelly (app and website), aCar, Spritmonitor, Simply Auto, My Cars
+            and LubeLogger. For a spreadsheet, save it as CSV with a header row: Date, Odometer, Litres, and Price per
+            litre or Total.
+          </p>
         </details>
       </template>
 
@@ -40,6 +42,7 @@
       <template v-else-if="plan && !result">
         <div class="fb-card summary">
           <strong>{{ fileName }}</strong>
+          <span v-if="plan.app" class="fb-muted">Recognised as a {{ plan.app }} export</span>
           <span>{{ plural(selectedFillUps.length, 'fill-up') }}<template v-if="selectedCosts.length">, {{ plural(selectedCosts.length, 'running cost') }}</template></span>
           <span v-if="range" class="fb-muted">{{ formatDate(range.from) }} to {{ formatDate(range.to) }}</span>
           <span v-for="w in plan.warnings" :key="w" class="fb-warning-text">{{ w }}</span>
