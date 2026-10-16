@@ -64,3 +64,15 @@ contains no personal data, and the request sends none.
 
 Each month, upload the new file as soon as the DMPR announces the prices. Phones that
 open FuelBuddy before the change will schedule the "price changes tomorrow" alert.
+
+## Later: automatic updates from a paid API
+
+[FuelSA](https://www.fuelsa.co.za/) offers a South African fuel price API (about R59 per
+1 000 requests a month, as of October 2026). When it's worth paying for:
+
+- **Never put the API key in the app.** Keys can be extracted from an APK, and calls from
+  every phone would use up the quota quickly.
+- Instead, run a scheduled job (for example a GitHub Action, daily) that calls the API with
+  the key stored as a repository secret, converts the response to the format above, and
+  publishes `fuel-prices-za.json` to GitHub Pages. That's about 30 requests a month,
+  however many people use the app, and the app needs no changes.
