@@ -1,7 +1,7 @@
 # Google Play listing
 
 Paste these into Play Console → **Grow → Store presence → Main store listing**. Limits
-are in brackets. The screenshots and feature graphic are in [`store/`](../store/).
+are in brackets. The screenshots (1080×1920) and feature graphic (1024×500) are in [`store/play/`](../store/play/). Rebuild them with `scripts/make-demo-backup.mjs` (demo data), screenshots of the app in `store/raw/`, then `scripts/make-store-graphics.ps1`.
 
 ## App name (30)
 

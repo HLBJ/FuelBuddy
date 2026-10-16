@@ -22,6 +22,9 @@ export const BACKUP_TABLES = Object.freeze(['vehicles', 'fuel_entries', 'reminde
  */
 const PROTECTED_SETTINGS = Object.freeze(['proUnlocked', 'fuelPricesCache', 'fuelPricesFetchedAt'])
 
+/** Backed up, but a restore never replaces this phone's own value (so a backup can't restart the trial). */
+const KEEP_IF_PRESENT = Object.freeze(['proTrialStartedAt'])
+
 const MAX_ROWS_PER_TABLE = 200_000
 
 export class BackupError extends Error {
@@ -122,8 +125,8 @@ export async function restoreBackup(db, backup) {
     }
 
     for (const table of [...BACKUP_TABLES].reverse()) await tx.run(`DELETE FROM ${table}`)
-    const keep = PROTECTED_SETTINGS.map(() => '?').join(', ')
-    await tx.run(`DELETE FROM settings WHERE key NOT IN (${keep})`, PROTECTED_SETTINGS)
+    const kept = [...PROTECTED_SETTINGS, ...KEEP_IF_PRESENT]
+    await tx.run(`DELETE FROM settings WHERE key NOT IN (${kept.map(() => '?').join(', ')})`, kept)
 
     for (const table of BACKUP_TABLES) {
       for (const row of backup.tables[table] || []) {
@@ -137,7 +140,8 @@ export async function restoreBackup(db, backup) {
     const now = new Date().toISOString()
     for (const [key, value] of Object.entries(backup.settings || {})) {
       if (PROTECTED_SETTINGS.includes(key) || typeof value !== 'string') continue
-      await tx.run('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)', [key, value, now])
+      // OR IGNORE: a kept setting already on this phone wins over the backup's.
+      await tx.run('INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?, ?, ?)', [key, value, now])
     }
     return summariseBackup(backup)
   })

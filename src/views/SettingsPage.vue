@@ -77,8 +77,8 @@
           </ion-toggle>
         </ion-item>
         <ion-item lines="none">
-          <ion-label class="ion-text-wrap prices-note fb-muted">
-            Official prices up to {{ formatDate(latestPriceDate) }}, from the Department of Mineral and Petroleum Resources.
+          <ion-label class="ion-text-wrap">
+            <p>Official prices up to {{ formatDate(latestPriceDate) }}, from the Department of Mineral and Petroleum Resources.</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -267,7 +267,7 @@ async function restoreFromFile(event) {
     await useServices().backup.restore(text)
     feedback.success('Backup restored')
     // Start afresh so every screen, setting and reminder reflects the restored data.
-    setTimeout(() => window.location.reload(), 1200)
+    setTimeout(() => window.location.replace('/tabs/dashboard'), 1200)
   } catch (error) {
     feedback.error(`Restore failed: ${error.message}`)
   } finally {
@@ -331,9 +331,6 @@ async function deleteAll() {
   font-size: 0.78rem;
   margin: 2px 0 0;
   white-space: normal;
-}
-.prices-note {
-  font-size: 0.78rem;
 }
 .hidden-input {
   display: none;

@@ -85,4 +85,18 @@ describe('backup and restore', () => {
     await expect(restoreBackup(db, parseBackup(JSON.stringify(bad)))).rejects.toThrow()
     expect(await dump(db)).toEqual(before)
   })
+
+  it('cannot restart the Pro trial by restoring an old backup', async () => {
+    const { db } = await seededDb()
+    const settings = createSettingsRepository(db)
+    const beforeTrial = parseBackup(JSON.stringify(await createBackup(db)))
+    await settings.set('proTrialStartedAt', '2026-10-01T08:00:00.000Z')
+    await restoreBackup(db, beforeTrial)
+    expect(await settings.get('proTrialStartedAt')).toBe('2026-10-01T08:00:00.000Z')
+
+    // A new phone takes the trial date from the backup.
+    const newPhone = await createTestDb()
+    await restoreBackup(newPhone, parseBackup(JSON.stringify(await createBackup(db))))
+    expect(await createSettingsRepository(newPhone).get('proTrialStartedAt')).toBe('2026-10-01T08:00:00.000Z')
+  })
 })

@@ -41,15 +41,26 @@ const petrol = [22.1, 21.6, 21.9, 22.4, 23.0, 24.6, 26.63, 28.06, 26.1, 25.58, 2
 const diesel = [21.4, 21.0, 21.3, 21.9, 22.6, 25.8, 31.38, 28.76, 25.17, 26.41, 29.56, 32.8]
 const firstMonth = shiftMonth(monthKey(today), -11)
 
+// Seeded random numbers: realistic variation, but the same file every time.
+let seed = 20261016
+const random = () => {
+  seed = (seed + 0x6d2b79f5) | 0
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+}
+
 async function fillUps(vehicle, prices, { start, kmPerFill, baseConsumption, extra, stations }) {
   let odo = start
   for (let m = 0; m < 12; m += 1) {
     for (const day of ['03', '13', '23']) {
       const date = `${shiftMonth(firstMonth, m)}-${day}`
       if (date > addDays(today, -3)) continue
-      const km = kmPerFill + Math.round(Math.sin(odo / 900) * 60)
+      const km = kmPerFill + Math.round((random() - 0.5) * 160)
       odo += km
-      const consumption = baseConsumption + Math.cos(odo / 1300) * extra
+      // Winter (June to August) uses a little more fuel; plus everyday variation.
+      const winter = [5, 6, 7].includes(Number(shiftMonth(firstMonth, m).slice(5)) - 1) ? extra * 0.8 : 0
+      const consumption = baseConsumption + winter + (random() - 0.5) * extra * 1.4
       await fuel.create({
         vehicleId: vehicle.id, date, odometer: String(odo), litres: (Math.round(km * consumption) / 100).toFixed(2),
         pricePerLitre: String(prices[m] + (vehicle === hilux ? 1.2 : 0)), fuelStation: stations[odo % stations.length], notes: '', isFullTank: true,
@@ -77,15 +88,17 @@ for (const [offset, day, category, amount, description] of costs) {
 await reminders.create({ vehicleId: polo.id, type: 'licence', title: 'Renew licence disc', dueDate: addDays(today, 12) })
 await reminders.create({ vehicleId: polo.id, type: 'service', title: '90 000 km service', dueOdometer: '90000' })
 
+// Oldest first, so each trip starts where the previous one ended.
 const trips = [
-  [-1, 64, 'Office, Claremont', 'Bellville Business Park', 'Client meeting – Acme Logistics'],
-  [-1, 66, 'Bellville Business Park', 'Office, Claremont', 'Return from client meeting'],
-  [-6, 98, 'Office, Claremont', 'Stellenbosch', 'Site inspection – Winelands project'],
-  [-9, 42, 'Office, Claremont', 'Cape Town CBD', 'Supplier visit – Harbour Electrical'],
+  [-9, 42, 'business', 'Office, Claremont', 'Cape Town CBD', 'Supplier visit – Harbour Electrical'],
+  [-6, 98, 'business', 'Office, Claremont', 'Stellenbosch', 'Site inspection – Winelands project'],
+  [-5, 112, 'private', 'Home', 'Hermanus', ''],
+  [-1, 64, 'business', 'Office, Claremont', 'Bellville Business Park', 'Client meeting – Acme Logistics'],
+  [-1, 66, 'business', 'Bellville Business Park', 'Office, Claremont', 'Return from client meeting'],
 ]
 let tripOdo = poloOdo
-for (const [daysAgo, km, origin, destination, reason] of [...trips].reverse()) {
-  await logbook.create({ vehicleId: polo.id, date: addDays(today, daysAgo), purpose: 'business', startOdometer: String(tripOdo), endOdometer: String(tripOdo + km), origin, destination, reason })
+for (const [daysAgo, km, purpose, origin, destination, reason] of trips) {
+  await logbook.create({ vehicleId: polo.id, date: addDays(today, daysAgo), purpose, startOdometer: String(tripOdo), endOdometer: String(tripOdo + km), origin, destination, reason })
   tripOdo += km
 }
 await logbook.setReadings(polo.id, Number(today.slice(0, 4)) + (Number(today.slice(5, 7)) >= 3 ? 1 : 0), { openingOdometer: '64850', closingOdometer: '' })

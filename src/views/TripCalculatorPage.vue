@@ -18,7 +18,7 @@
         <ion-icon slot="start" :icon="bookOutline" aria-hidden="true" />
         <ion-label class="ion-text-wrap">
           <h2>Travel logbook for SARS</h2>
-          <p>Log business trips and export a SARS-ready logbook at tax time.</p>
+          <p>Log business trips and export a logbook for SARS at tax time.</p>
         </ion-label>
       </ion-item>
 
