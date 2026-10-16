@@ -67,8 +67,10 @@ export function createVehicleService(db) {
       return db.transaction(async (tx) => {
         const repo = createVehicleRepository(tx)
         const vehicle = await requireVehicle(repo, id)
-        // Explicit delete keeps behaviour identical even if a driver had FKs disabled.
-        await tx.run('DELETE FROM fuel_entries WHERE vehicle_id = ?', [id])
+        // Explicit deletes keep behaviour identical even if a driver had FKs disabled.
+        for (const table of ['fuel_entries', 'reminders', 'trips', 'logbook_years', 'expenses']) {
+          await tx.run(`DELETE FROM ${table} WHERE vehicle_id = ?`, [id])
+        }
         await repo.delete(id)
         if (vehicle.isDefault) {
           const remaining = await repo.list()

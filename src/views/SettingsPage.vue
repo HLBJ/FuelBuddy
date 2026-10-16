@@ -111,6 +111,13 @@
             <p>Business trips for SARS</p>
           </ion-label>
         </ion-item>
+        <ion-item button router-link="/import" detail>
+          <ion-icon slot="start" :icon="swapHorizontalOutline" aria-hidden="true" />
+          <ion-label>
+            Import from another app
+            <p>Fuelio, Drivvo, Fuelly, spreadsheets</p>
+          </ion-label>
+        </ion-item>
         <ion-item button :disabled="busy !== null" detail="false" @click="backUp">
           <ion-icon slot="start" :icon="cloudUploadOutline" aria-hidden="true" />
           <ion-label>
@@ -184,7 +191,7 @@ import {
   IonSelectOption, IonSpinner, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
 import {
-  alarmOutline, bookOutline, carSportOutline, receiptOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
+  alarmOutline, bookOutline, carSportOutline, receiptOutline, swapHorizontalOutline, checkmarkCircle, cloudDownloadOutline, cloudUploadOutline, downloadOutline, informationCircleOutline, shieldCheckmarkOutline, starOutline,
   trashOutline,
 } from 'ionicons/icons'
 import { appConfig } from '../config/appConfig.js'

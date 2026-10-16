@@ -178,3 +178,26 @@ describe('repositories', () => {
     expect(await repo.get('theme')).toBe('system')
   })
 })
+
+import initSqlJsForFk from 'sql.js'
+import { createSqlJsDriver as createPersistingDriver } from '../src/database/drivers/sqljsDriver.js'
+import { runMigrations as migrateForFk } from '../src/database/migrator.js'
+import { createVehicleService as vehicleServiceForFk } from '../src/services/vehicleService.js'
+
+describe('deleting a vehicle', () => {
+  it('removes everything recorded for it, even after the browser driver has saved', async () => {
+    const SQL = await initSqlJsForFk()
+    // The browser preview saves after every write, which reopens the sql.js connection.
+    const db = createPersistingDriver(SQL, { persist: () => {} })
+    await migrateForFk(db)
+    expect((await db.query('PRAGMA foreign_keys'))[0].foreign_keys).toBe(1)
+    const vehicles = vehicleServiceForFk(db)
+    const v = await vehicles.create({ name: 'Old', fuelType: 'petrol', currentOdometer: '1000' })
+    await db.run("INSERT INTO expenses (vehicle_id, date, category, amount, created_at, updated_at) VALUES (?, '2026-10-01', 'tolls', 50, 'x', 'x')", [v.id])
+    await db.run("INSERT INTO reminders (vehicle_id, type, title, due_date, created_at, updated_at) VALUES (?, 'other', 'x', '2027-01-01', 'x', 'x')", [v.id])
+    await db.run("INSERT INTO trips (vehicle_id, date, start_odometer, end_odometer, created_at, updated_at) VALUES (?, '2026-10-01', 1, 2, 'x', 'x')", [v.id])
+    await vehicles.delete(v.id)
+    for (const table of ['expenses', 'reminders', 'trips', 'fuel_entries']) expect(await db.query(`SELECT * FROM ${table}`)).toEqual([])
+    expect((await db.query('PRAGMA foreign_keys'))[0].foreign_keys).toBe(1)
+  })
+})

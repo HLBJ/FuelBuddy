@@ -124,7 +124,9 @@
             :icon="waterOutline"
             title="No fill-ups yet"
             message="Record your next fill-up to start tracking consumption and spending."
-          />
+          >
+            <ion-button fill="outline" expand="block" router-link="/import">Import from another app</ion-button>
+          </EmptyState>
           <div v-if="recent.length" class="ion-padding-horizontal">
             <ion-button fill="clear" expand="block" router-link="/tabs/history">View full history</ion-button>
           </div>

@@ -28,6 +28,7 @@ const routes = [
   { path: '/logbook', component: () => import('../views/LogbookPage.vue') },
   { path: '/logbook/new', component: () => import('../views/TripFormPage.vue') },
   { path: '/logbook/:id/edit', component: () => import('../views/TripFormPage.vue'), props: true },
+  { path: '/import', component: () => import('../views/ImportPage.vue') },
   { path: '/costs', component: () => import('../views/ExpensesPage.vue') },
   { path: '/costs/new', component: () => import('../views/ExpenseFormPage.vue') },
   { path: '/costs/:id/edit', component: () => import('../views/ExpenseFormPage.vue'), props: true },

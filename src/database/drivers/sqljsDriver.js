@@ -48,7 +48,14 @@ export function createSqlJsDriver(SQL, { data, persist } = {}) {
     },
   }
 
-  const onWrite = persist ? () => persist(db.export()) : undefined
+  // db.export() reopens the connection, which switches foreign keys off again.
+  const onWrite = persist
+    ? async () => {
+        const bytes = db.export()
+        db.run('PRAGMA foreign_keys = ON')
+        await persist(bytes)
+      }
+    : undefined
   const driver = createSerializedDriver(raw, { onWrite })
   driver.exportBytes = () => db.export()
   return driver
