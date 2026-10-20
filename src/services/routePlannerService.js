@@ -10,7 +10,7 @@ import { roundTo } from './numberUtils.js'
 export const PLANNER_LIMITS = Object.freeze({
   maxStops: 9, // Google Maps Android accepts up to 9 waypoints
   maxStationDetourKm: 3,
-  maxTollOffsetKm: 0.3,
+  maxTollOffsetKm: 0.15, // booths are on the carriageway; further away is another road
   /** Plan stops before the tank is this full-range fraction empty. */
   usableRangeFraction: 0.75,
   defaultLegKm: 400,

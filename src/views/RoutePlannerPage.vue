@@ -136,9 +136,12 @@
             </ion-select>
           </div>
           <ul class="tolls fb-tabular">
-            <li v-for="t in pricedTolls.plazas" :key="t.id">
+            <li v-for="t in pricedTolls.plazas" :key="t.id" :class="{ optional: t.optional }">
               <span class="toll-badge">T</span>
-              <span>{{ t.name || 'Toll plaza' }}<span class="fb-muted"> · {{ formatDistance(t.alongKm) }}</span></span>
+              <span>
+                {{ t.name || 'Toll plaza' }}<span class="fb-muted"> · {{ formatDistance(t.alongKm) }}</span>
+                <span v-if="t.optional" class="fb-muted ramp-note">Ramp: only if you use this exit</span>
+              </span>
               <strong>{{ t.fee === null ? '?' : formatCurrency(t.fee, currency) }}</strong>
             </li>
             <li class="toll-total">
@@ -234,7 +237,7 @@ watch(() => [state.activeVehicleId, state.revision], async () => {
 // Toll fees for the vehicle's class (changeable here for this trip).
 const tollClass = ref(1)
 watch(() => activeVehicle.value?.tollClass, (c) => { tollClass.value = c || 1 }, { immediate: true })
-const pricedTolls = computed(() => routeTolls(tolls.value, tollClass.value))
+const pricedTolls = computed(() => routeTolls(tolls.value, tollClass.value, { totalKm: route.value?.distanceKm ?? null }))
 const tollClassLabel = computed(() => `class ${tollClass.value}`)
 const tariffYear = (tariffsEffectiveFrom() || '').slice(0, 4)
 
@@ -533,6 +536,14 @@ function detourText(km) {
   max-width: 130px;
   font-size: 0.85rem;
   color: var(--ion-color-primary);
+}
+.tolls li.optional strong {
+  color: var(--fb-text-muted);
+  font-weight: 400;
+}
+.ramp-note {
+  display: block;
+  font-size: 0.75rem;
 }
 .toll-total {
   border-top: 1px solid var(--fb-border);

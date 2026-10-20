@@ -37,14 +37,26 @@ export function tollFee(name, tollClass = 1, t = tariffs()) {
   return typeof fee === 'number' ? fee : null
 }
 
+export function isRampPlaza(name, t = tariffs()) {
+  return Boolean(t.byName.get(norm(name))?.ramp)
+}
+
+/** A ramp plaza this close to the start or end is where the trip joins or leaves the highway. */
+export const RAMP_ENDPOINT_KM = 3
+
 /**
- * Adds fees to the plazas on a route and totals them.
- * @param {Array<{name}>} plazas from tollPlazasAlongRoute
- * @returns {{ plazas: Array, total: number, unknown: number }} plazas with a `fee`
+ * Adds fees to the plazas on a route and totals them. Ramp plazas are only charged
+ * near the start or end of the trip; along the way the route passes them on the
+ * highway, so they're listed as `optional` (paid only when using that exit).
+ * @param {Array<{name, alongKm}>} plazas from tollPlazasAlongRoute
+ * @param {{ totalKm?: number }} [route]
+ * @returns {{ plazas: Array, total: number, unknown: number }} plazas with `fee` and `optional`
  */
-export function routeTolls(plazas, tollClass = 1, t = tariffs()) {
+export function routeTolls(plazas, tollClass = 1, { totalKm = null } = {}, t = tariffs()) {
   const roadTolls = (plazas || []).filter((p) => isRoadToll(p.name, t))
-  const priced = roadTolls.map((p) => ({ ...p, fee: tollFee(p.name, tollClass, t) }))
-  const total = roundTo(priced.reduce((sum, p) => sum + (p.fee ?? 0), 0), 2)
-  return { plazas: priced, total, unknown: priced.filter((p) => p.fee === null).length }
+  const nearEnd = (p) => p.alongKm <= RAMP_ENDPOINT_KM || (totalKm !== null && totalKm - p.alongKm <= RAMP_ENDPOINT_KM)
+  const priced = roadTolls.map((p) => ({ ...p, fee: tollFee(p.name, tollClass, t), optional: isRampPlaza(p.name, t) && !nearEnd(p) }))
+  const charged = priced.filter((p) => !p.optional)
+  const total = roundTo(charged.reduce((sum, p) => sum + (p.fee ?? 0), 0), 2)
+  return { plazas: priced, total, unknown: charged.filter((p) => p.fee === null).length }
 }

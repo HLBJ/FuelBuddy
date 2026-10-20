@@ -32,4 +32,11 @@ describe('toll tariffs (SANRAL 2026)', () => {
     const missing = names.filter((n) => tollFee(n) === null)
     expect(missing).toEqual(['Dr. Swanepoel Ramp Tollgate']) // not in SANRAL's list
   })
+
+  it('charges ramp plazas only where the trip joins or leaves the highway', () => {
+    const route = [{ name: 'Mooi Plaza', alongKm: 429 }, { name: 'Treverton Plaza', alongKm: 426 }, { name: 'Bergville', alongKm: 1.2 }]
+    const r = routeTolls(route, 1, { totalKm: 570 })
+    expect(r.plazas.map((p) => [p.name, p.optional])).toEqual([['Mooi Plaza', false], ['Treverton Plaza', true], ['Bergville', false]])
+    expect(r.total).toBe(100) // Mooi 70 + Bergville 30, at the start
+  })
 })
