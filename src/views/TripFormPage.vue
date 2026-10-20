@@ -67,6 +67,10 @@
               :error-text="errors.endOdometer"
               :helper-text="distanceText"
             />
+            <ion-button v-if="canScan" slot="end" fill="clear" :disabled="scanning" aria-label="Read the odometer from a photo" @click="scanOdo('endOdometer')">
+              <ion-spinner v-if="scanning" slot="icon-only" name="crescent" />
+              <ion-icon v-else slot="icon-only" :icon="cameraOutline" />
+            </ion-button>
           </ion-item>
           <ion-item>
             <ion-input
@@ -132,7 +136,9 @@ import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage,
   IonSegment, IonSegmentButton, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToolbar,
 } from '@ionic/vue'
-import { alertCircleOutline, trashOutline } from 'ionicons/icons'
+import { alertCircleOutline, cameraOutline, trashOutline } from 'ionicons/icons'
+import { Capacitor } from '@capacitor/core'
+import { scanOdometer } from '../services/odometerScanService.js'
 import EmptyState from '../components/EmptyState.vue'
 import { notifyDataChanged, useAppStore } from '../stores/appStore.js'
 import { useServices } from '../services/appServices.js'
@@ -163,6 +169,26 @@ const distanceText = computed(() => {
   const end = parseDecimal(form.endOdometer)
   return start !== null && end !== null && end >= start ? `Distance: ${formatDistance(end - start)}` : ''
 })
+
+const canScan = Capacitor.isNativePlatform()
+const scanning = ref(false)
+
+async function scanOdo(field) {
+  scanning.value = true
+  try {
+    const result = await scanOdometer({ lastOdometer: parseDecimal(form.startOdometer) })
+    if (!result) return
+    if (result.best === null) feedback.error("Couldn't find the odometer reading. Try a closer, sharper photo.")
+    else {
+      form[field] = String(result.best)
+      feedback.toast(`Odometer ${formatDistance(result.best)}. Please check it.`, 'success', 2500)
+    }
+  } catch (error) {
+    feedback.error(`Couldn't read the photo: ${error.message}`)
+  } finally {
+    scanning.value = false
+  }
+}
 
 function fieldClass(field) {
   return { 'ion-invalid': Boolean(errors.value[field]), 'ion-touched': Boolean(errors.value[field]) }
