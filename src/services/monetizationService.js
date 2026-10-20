@@ -18,6 +18,8 @@ export const ENTITLEMENT = Object.freeze({ OWNED: 'owned', PENDING: 'pending', N
 export const PRO_FEATURES = Object.freeze({
   AD_FREE: 'adFree',
   ADVANCED_STATISTICS: 'advancedStatistics',
+  LOGBOOK_EXPORT: 'logbookExport',
+  COST_OF_DRIVING: 'costOfDriving',
 })
 
 /** Interprets Play purchases for the Pro product. */

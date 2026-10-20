@@ -4,4 +4,12 @@
     <string name="title_activity_main">FuelBuddy</string>
     <string name="package_name">coza.wacko.fuelbuddy</string>
     <string name="custom_url_scheme">coza.wacko.fuelbuddy</string>
+    <string name="widget_quick_add_label">Add fill-up</string>
+    <string name="widget_quick_add_description">Add a fill-up in one tap</string>
+    <string name="shortcut_add_short">Add fill-up</string>
+    <string name="shortcut_add_long">Add a fill-up</string>
+    <string name="shortcut_route_short">Plan route</string>
+    <string name="shortcut_route_long">Plan a route with fuel stops</string>
+    <string name="shortcut_reminders_short">Reminders</string>
+    <string name="shortcut_reminders_long">Licence disc and service reminders</string>
 </resources>

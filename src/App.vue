@@ -16,9 +16,23 @@ import { IonApp, IonButton, IonIcon, IonRouterOutlet, useBackButton, useIonRoute
 import { warningOutline } from 'ionicons/icons'
 import { Capacitor } from '@capacitor/core'
 import { startApp, useAppStore } from './stores/appStore.js'
+import { routeForDeepLink, routeForNotification } from './services/deepLinks.js'
 
 const { state } = useAppStore()
 const ionRouter = useIonRouter()
+
+// Widget / app-shortcut links (fuelbuddy://…) and reminder notification taps.
+async function listenForExternalLinks() {
+  if (!Capacitor.isNativePlatform()) return
+  const go = (path) => path && ionRouter.navigate(path, 'forward', 'push')
+  const { App } = await import('@capacitor/app')
+  App.addListener('appUrlOpen', ({ url }) => go(routeForDeepLink(url)))
+  const launch = await App.getLaunchUrl()
+  if (launch?.url) go(routeForDeepLink(launch.url))
+  const { LocalNotifications } = await import('@capacitor/local-notifications')
+  LocalNotifications.addListener('localNotificationActionPerformed', ({ notification }) => go(routeForNotification(notification?.extra)))
+}
+startApp().then(listenForExternalLinks).catch(() => {})
 
 // With @capacitor/app installed, Android hands the back button to the app. Overlays
 // and page history are handled by Ionic at higher priorities; this lowest-priority

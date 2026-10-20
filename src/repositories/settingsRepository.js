@@ -5,6 +5,23 @@ export const SETTING_DEFAULTS = Object.freeze({
   currency: 'ZAR',
   onboardingComplete: false,
   proUnlocked: false,
+  /** ISO timestamp when the one-time 7-day Pro trial started (null = never). */
+  proTrialStartedAt: null,
+  /** ISO timestamp when the Play Store rating prompt was requested (null = never). */
+  reviewAskedAt: null,
+  /** ISO timestamp when the dashboard Pro offer was dismissed (null = never). */
+  proNudgeDismissedAt: null,
+  /** Fuel price region and grades, for official prices and change alerts. */
+  fuelRegion: 'inland', // 'inland' | 'coastal'
+  petrolGrade: 'ulp95', // 'ulp93' | 'ulp95'
+  dieselGrade: 'diesel50', // 'diesel50' | 'diesel500'
+  fuelPriceAlerts: true,
+  /** Last downloaded price file and when it was fetched (device-only, not backed up). */
+  fuelPricesCache: null,
+  fuelPricesFetchedAt: null,
+  /** Last downloaded toll tariff file and when it was fetched (device-only, not backed up). */
+  tollTariffsCache: null,
+  tollTariffsFetchedAt: null,
 })
 
 /**

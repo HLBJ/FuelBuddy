@@ -1,0 +1,4 @@
+car_name, model, l/100km,  odometer, km, litres, price, city_percentage, fuelup_date, date_added, tags, notes, missed_fuelup, partial_fuelup, latitude, longitude
+"Renault Laguna 2.2dT","Renault Laguna",0.00,200124.0,22.00,5.35,2.560,100,2014-06-22,2014-06-22 13:12:58,"eko","After Mramor, this time really to pped up",0,0,,
+"Renault Laguna 2.2dT","Renault Laguna",6.10,200840.0,716.00,43.70,2.490,50,2014-07-05,2014-07-05 18:01:12,"","",0,0,,
+"Renault Laguna 2.2dT","Renault Laguna",6.30,201410.0,570.00,20.10,2.520,50,2014-07-15,2014-07-15 08:30:00,"","",0,1,,

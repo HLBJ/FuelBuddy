@@ -35,6 +35,47 @@
           </ion-button>
         </div>
 
+        <PriceChangeCard
+          v-if="priceChange"
+          :change="priceChange"
+          :tank-capacity="activeVehicle.tankCapacity"
+          :currency="currency"
+        />
+
+        <FuelForecastCard v-if="forecast" :forecast="forecast" :vehicle-id="activeVehicle.id" />
+
+        <!-- Reminders: urgent ones first; otherwise a gentle prompt to add one -->
+        <ion-list lines="full" class="reminders">
+          <ion-item v-for="r in urgentReminders" :key="r.id" button detail="false" :router-link="`/reminders/${r.id}/edit`">
+            <ion-icon slot="start" :icon="alarmOutline" :color="r.status === 'overdue' ? 'danger' : 'warning'" aria-hidden="true" />
+            <ion-label class="ion-text-wrap">
+              <h3>{{ r.title }}</h3>
+              <p>{{ r.status === 'overdue' ? 'Overdue' : 'Due soon' }}{{ r.dueDate ? ` · ${formatDate(r.dueDate)}` : '' }}{{ r.dueOdometer !== null ? ` · at ${formatDistance(r.dueOdometer)}` : '' }}</p>
+            </ion-label>
+          </ion-item>
+          <ion-item button detail router-link="/reminders" lines="none">
+            <ion-icon slot="start" :icon="urgentReminders.length ? listOutline : alarmOutline" color="medium" aria-hidden="true" />
+            <ion-label class="ion-text-wrap">
+              {{ reminderCount ? 'All reminders' : 'Set a reminder' }}
+              <p v-if="!reminderCount">Licence disc, service or tyres. We'll remind you.</p>
+              <p v-else-if="!urgentReminders.length">Nothing due soon.</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+
+        <!-- Pro offer, shown once trends are meaningful -->
+        <div v-if="showProNudge" class="fb-card nudge">
+          <ion-icon :icon="trendingUpOutline" class="nudge-icon" aria-hidden="true" />
+          <div class="nudge-text">
+            <strong>Your fuel trends are ready</strong>
+            <span class="fb-muted">See your consumption trend, 12-month spending and best and worst tanks.</span>
+            <div class="nudge-actions">
+              <ion-button size="small" @click="tryPro">{{ trial.used ? 'See Pro' : 'Try Pro free for 7 days' }}</ion-button>
+              <ion-button size="small" fill="clear" @click="dismissNudge">Not now</ion-button>
+            </div>
+          </div>
+        </div>
+
         <div v-if="loading" class="ion-text-center ion-padding"><ion-spinner /></div>
 
         <template v-else-if="stats">
@@ -83,7 +124,9 @@
             :icon="waterOutline"
             title="No fill-ups yet"
             message="Record your next fill-up to start tracking consumption and spending."
-          />
+          >
+            <ion-button fill="outline" expand="block" router-link="/import">Import from another app</ion-button>
+          </EmptyState>
           <div v-if="recent.length" class="ion-padding-horizontal">
             <ion-button fill="clear" expand="block" router-link="/tabs/history">View full history</ion-button>
           </div>
@@ -99,16 +142,24 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
-  IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonList, IonPage, IonSpinner, IonTitle, IonToolbar,
+  IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSpinner, IonTitle, IonToolbar,
 } from '@ionic/vue'
-import { addCircleOutline, carSportOutline, mapOutline, waterOutline } from 'ionicons/icons'
+import { addCircleOutline, alarmOutline, carSportOutline, listOutline, mapOutline, trendingUpOutline, waterOutline } from 'ionicons/icons'
 import EmptyState from '../components/EmptyState.vue'
 import StatTile from '../components/StatTile.vue'
 import VehicleSwitcher from '../components/VehicleSwitcher.vue'
 import FuelEntryItem from '../components/FuelEntryItem.vue'
-import { useAppStore } from '../stores/appStore.js'
+import FuelForecastCard from '../components/FuelForecastCard.vue'
+import PriceChangeCard from '../components/PriceChangeCard.vue'
+import { ALERT_MIN_CHANGE } from '../services/fuelPriceService.js'
+import { daysBetween } from '../services/dateUtils.js'
+import { forecastFuel } from '../services/fuelForecastService.js'
+import { toIsoDate } from '../services/dateUtils.js'
+import { priceChangeForVehicle, startProTrial, updateSetting, useAppStore } from '../stores/appStore.js'
+import { useRouter } from 'vue-router'
+import { shouldShowProNudge } from '../services/engagementService.js'
 import { useServices } from '../services/appServices.js'
 import { computeVehicleStatistics } from '../services/statisticsService.js'
 import { segmentsByClosingEntry } from '../services/fuelCalculationService.js'
@@ -116,12 +167,53 @@ import {
   formatConsumption, formatCostPerKm, formatCurrency, formatDate, formatDistance, formatLitres,
 } from '../services/formatService.js'
 
-const { state, activeVehicle, currency } = useAppStore()
+const { state, activeVehicle, currency, trial } = useAppStore()
+const router = useRouter()
+const urgentReminders = ref([])
+const reminderCount = ref(0)
+const showProNudge = computed(() =>
+  Boolean(stats.value) &&
+  shouldShowProNudge({
+    isPro: state.isPro,
+    trialStartedAt: state.settings.proTrialStartedAt,
+    segmentCount: stats.value.segmentCount,
+    nudgeDismissedAt: state.settings.proNudgeDismissedAt,
+    now: state.now,
+  }),
+)
+
+async function tryPro() {
+  if (!trial.value.used && (await startProTrial())) {
+    router.push('/tabs/statistics')
+    return
+  }
+  router.push('/pro')
+}
+
+function dismissNudge() {
+  updateSetting('proNudgeDismissedAt', new Date().toISOString())
+}
 const loading = ref(false)
 const loadError = ref(null)
 const stats = ref(null)
 const recent = ref([])
 const segments = ref(new Map())
+const entries = ref([])
+
+// An announced price change for this vehicle's fuel in the next two weeks.
+const priceChange = computed(() => {
+  const today = toIsoDate(new Date(state.now))
+  const change = priceChangeForVehicle(activeVehicle.value, today)
+  if (!change || Math.abs(change.change) < ALERT_MIN_CHANGE || daysBetween(today, change.effective) > 14) return null
+  return change
+})
+
+// Recomputed as the clock ticks, so "fill up in 3 days" stays current.
+const forecast = computed(() =>
+  entries.value.length
+    ? forecastFuel(entries.value, { tankCapacity: activeVehicle.value?.tankCapacity, today: toIsoDate(new Date(state.now)) })
+    : null,
+)
 
 async function load() {
   const vehicle = activeVehicle.value
@@ -129,12 +221,17 @@ async function load() {
   loading.value = true
   loadError.value = null
   try {
-    const entries = await useServices().fuel.listByVehicle(vehicle.id)
-    stats.value = computeVehicleStatistics(entries)
-    segments.value = segmentsByClosingEntry(entries)
-    recent.value = entries.slice(-5).reverse()
+    const list = await useServices().fuel.listByVehicle(vehicle.id)
+    entries.value = list
+    stats.value = computeVehicleStatistics(list)
+    segments.value = segmentsByClosingEntry(list)
+    recent.value = list.slice(-5).reverse()
+    const open = await useServices().reminders.upcoming(vehicle.id, vehicle.currentOdometer)
+    reminderCount.value = open.length
+    urgentReminders.value = open.filter((r) => r.status !== 'upcoming').slice(0, 3)
   } catch (error) {
     stats.value = null
+    entries.value = []
     loadError.value = error.message
   } finally {
     loading.value = false
@@ -155,6 +252,39 @@ watch(() => [state.activeVehicleId, state.revision], load, { immediate: true })
   margin: 0;
   --border-radius: 12px;
   min-height: 48px;
+}
+.reminders {
+  margin: 0 16px 12px;
+  border: 1px solid var(--fb-border);
+  border-radius: var(--fb-radius);
+  padding: 0;
+}
+.reminders h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.nudge {
+  display: flex;
+  gap: 12px;
+  border-color: rgba(var(--ion-color-secondary-rgb), 0.6);
+  background: rgba(var(--ion-color-secondary-rgb), 0.08);
+}
+.nudge-icon {
+  font-size: 28px;
+  color: var(--ion-color-secondary-shade);
+  flex-shrink: 0;
+}
+.nudge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+}
+.nudge-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 .data-note {
   font-size: 0.82rem;

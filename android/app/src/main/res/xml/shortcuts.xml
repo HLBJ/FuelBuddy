@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_fillup"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add_short"
+        android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="fuelbuddy://add-fillup"
+            android:targetPackage="coza.wacko.fuelbuddy"
+            android:targetClass="coza.wacko.fuelbuddy.DeepLinkActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="plan_route"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_route"
+        android:shortcutShortLabel="@string/shortcut_route_short"
+        android:shortcutLongLabel="@string/shortcut_route_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="fuelbuddy://route"
+            android:targetPackage="coza.wacko.fuelbuddy"
+            android:targetClass="coza.wacko.fuelbuddy.DeepLinkActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="reminders"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_alarm"
+        android:shortcutShortLabel="@string/shortcut_reminders_short"
+        android:shortcutLongLabel="@string/shortcut_reminders_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="fuelbuddy://reminders"
+            android:targetPackage="coza.wacko.fuelbuddy"
+            android:targetClass="coza.wacko.fuelbuddy.DeepLinkActivity" />
+    </shortcut>
+</shortcuts>

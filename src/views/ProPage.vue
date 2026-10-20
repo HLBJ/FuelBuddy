@@ -12,9 +12,13 @@
     <ion-content class="ion-padding">
       <div class="hero">
         <ion-icon :icon="state.isPro ? checkmarkCircle : star" class="hero-icon" :class="{ owned: state.isPro }" aria-hidden="true" />
-        <h1>{{ state.isPro ? 'Pro is unlocked' : 'Go Pro' }}</h1>
+        <h1>{{ state.isPro ? 'Pro is unlocked' : trial.active ? 'Your Pro trial' : 'Go Pro' }}</h1>
         <p class="fb-muted">
-          {{ state.isPro ? 'Thank you for supporting FuelBuddy.' : 'A one-time purchase. No subscription.' }}
+          <template v-if="state.isPro">Thank you for supporting FuelBuddy.</template>
+          <template v-else-if="trial.active">
+            {{ trial.daysLeft }} day{{ trial.daysLeft === 1 ? '' : 's' }} left. Keep Pro for good with a one-time purchase.
+          </template>
+          <template v-else>A one-time purchase. No subscription.</template>
         </p>
       </div>
 
@@ -33,14 +37,32 @@
             <p>12-month spending chart, consumption trends, monthly breakdown, best and worst consumption, and vehicle comparison.</p>
           </ion-label>
         </ion-item>
+        <ion-item>
+          <ion-icon slot="start" :icon="walletOutline" color="primary" aria-hidden="true" />
+          <ion-label class="ion-text-wrap">
+            <h2>True cost of driving</h2>
+            <p>Fuel plus services, tyres, insurance and tolls: your all-in cost per km and per month, by category.</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-icon slot="start" :icon="bookOutline" color="primary" aria-hidden="true" />
+          <ion-label class="ion-text-wrap">
+            <h2>SARS logbook export</h2>
+            <p>Export your travel logbook as a PDF or spreadsheet for your tax return, per vehicle and tax year.</p>
+          </ion-label>
+        </ion-item>
       </ion-list>
 
       <p class="free-note fb-muted">
-        Fuel tracking, unlimited vehicles, history, the trip calculator, basic statistics and CSV export are always free.
+        Fuel tracking, unlimited vehicles, history, slip scanning, fuel prices, reminders, the route planner, trip logging, running costs, backup and CSV export are always free.
       </p>
 
       <template v-if="!state.isPro">
-        <ion-button expand="block" size="large" :disabled="busy || !available" @click="buy">
+        <ion-button v-if="!trial.used" expand="block" size="large" class="trial" @click="beginTrial">
+          Try Pro free for 7 days
+        </ion-button>
+        <p v-if="!trial.used" class="trial-note fb-muted">No payment, no sign-up. It simply ends after a week.</p>
+        <ion-button expand="block" size="large" :fill="trial.used ? 'solid' : 'outline'" :disabled="busy || !available" @click="buy">
           <ion-spinner v-if="busy === 'buy'" slot="start" name="crescent" />
           Unlock Pro · {{ price }}
         </ion-button>
@@ -66,14 +88,14 @@ import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSpinner,
   IonTitle, IonToolbar,
 } from '@ionic/vue'
-import { checkmarkCircle, eyeOffOutline, star, statsChartOutline } from 'ionicons/icons'
-import { setPro, useAppStore } from '../stores/appStore.js'
+import { bookOutline, checkmarkCircle, eyeOffOutline, star, statsChartOutline, walletOutline } from 'ionicons/icons'
+import { setPro, startProTrial, useAppStore } from '../stores/appStore.js'
 import { useServices } from '../services/appServices.js'
 import { displayPrice, ENTITLEMENT } from '../services/monetizationService.js'
 import { formatCurrency } from '../services/formatService.js'
 import { useFeedback } from '../composables/useFeedback.js'
 
-const { state } = useAppStore()
+const { state, trial } = useAppStore()
 const feedback = useFeedback()
 const busy = ref(null)
 const product = ref(null)
@@ -92,6 +114,10 @@ function describeError(error) {
   const message = error?.message || ''
   if (/cancel/i.test(message)) return null
   return `Purchase could not be completed: ${message || 'unknown error'}`
+}
+
+async function beginTrial() {
+  if (await startProTrial()) feedback.success('Pro trial started: every Pro feature is yours for 7 days.')
 }
 
 async function buy() {
@@ -151,6 +177,14 @@ async function restore() {
   border: 1px solid var(--fb-border);
   border-radius: var(--fb-radius);
   margin-bottom: 10px;
+}
+.trial {
+  margin-bottom: 4px;
+}
+.trial-note {
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0 0 14px;
 }
 .free-note {
   font-size: 0.85rem;

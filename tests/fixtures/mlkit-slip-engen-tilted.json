@@ -1,0 +1,167 @@
+{
+ "text": "123 Main Road,\nDATE: 14/10/2026\nPUMP 3\nLITRES\nENGEN MAIN ROAD\nVAT NO 4123456789\nPRICE/L\nAMOUNT\nCARD\nVAT INCL\nRondebos ch\nTIME: 08:31\nULP95\n***\n40.25\nR 30.25\nR1 217.56\nR 158.81\n*****1234\nTHANK YOU - DRIVE SAFE",
+ "lines": [
+  {
+   "text": "123 Main Road,",
+   "left": 422,
+   "top": 455,
+   "right": 728,
+   "bottom": 507,
+   "angle": -2.9095053672790527
+  },
+  {
+   "text": "DATE: 14/10/2026",
+   "left": 340,
+   "top": 621,
+   "right": 697,
+   "bottom": 671,
+   "angle": -2.6845359802246094
+  },
+  {
+   "text": "PUMP 3",
+   "left": 343,
+   "top": 689,
+   "right": 473,
+   "bottom": 723,
+   "angle": -2.1892011165618896
+  },
+  {
+   "text": "LITRES",
+   "left": 350,
+   "top": 796,
+   "right": 479,
+   "bottom": 830,
+   "angle": -2.2572176456451416
+  },
+  {
+   "text": "ENGEN MAIN ROAD",
+   "left": 511,
+   "top": 398,
+   "right": 845,
+   "bottom": 444,
+   "angle": -2.9718706607818604
+  },
+  {
+   "text": "VAT NO 4123456789",
+   "left": 468,
+   "top": 506,
+   "right": 849,
+   "bottom": 554,
+   "angle": -2.990446090698242
+  },
+  {
+   "text": "PRICE/L",
+   "left": 352,
+   "top": 849,
+   "right": 504,
+   "bottom": 888,
+   "angle": -2.4826815128326416
+  },
+  {
+   "text": "AMOUNT",
+   "left": 353,
+   "top": 905,
+   "right": 485,
+   "bottom": 939,
+   "angle": -2.5610082149505615
+  },
+  {
+   "text": "CARD",
+   "left": 362,
+   "top": 1069,
+   "right": 447,
+   "bottom": 1100,
+   "angle": -2.660641670227051
+  },
+  {
+   "text": "VAT INCL",
+   "left": 358,
+   "top": 1009,
+   "right": 535,
+   "bottom": 1045,
+   "angle": -2.6877834796905518
+  },
+  {
+   "text": "Rondebos ch",
+   "left": 776,
+   "top": 442,
+   "right": 986,
+   "bottom": 489,
+   "angle": -2.9095053672790527
+  },
+  {
+   "text": "TIME: 08:31",
+   "left": 792,
+   "top": 604,
+   "right": 1036,
+   "bottom": 645,
+   "angle": -3.137526750564575
+  },
+  {
+   "text": "ULP95",
+   "left": 795,
+   "top": 666,
+   "right": 902,
+   "bottom": 698,
+   "angle": -2.5415186882019043
+  },
+  {
+   "text": "***",
+   "left": 755,
+   "top": 1050,
+   "right": 815,
+   "bottom": 1069,
+   "angle": 0
+  },
+  {
+   "text": "40.25",
+   "left": 935,
+   "top": 767,
+   "right": 1044,
+   "bottom": 800,
+   "angle": -2.960873603820801
+  },
+  {
+   "text": "R 30.25",
+   "left": 895,
+   "top": 822,
+   "right": 1048,
+   "bottom": 856,
+   "angle": -2.4482433795928955
+  },
+  {
+   "text": "R1 217.56",
+   "left": 829,
+   "top": 874,
+   "right": 1050,
+   "bottom": 915,
+   "angle": -3.26560378074646
+  },
+  {
+   "text": "R 158.81",
+   "left": 903,
+   "top": 983,
+   "right": 1080,
+   "bottom": 1018,
+   "angle": -2.406033515930176
+  },
+  {
+   "text": "*****1234",
+   "left": 907,
+   "top": 1036,
+   "right": 1107,
+   "bottom": 1066,
+   "angle": 0
+  },
+  {
+   "text": "THANK YOU - DRIVE SAFE",
+   "left": 481,
+   "top": 1149,
+   "right": 973,
+   "bottom": 1203,
+   "angle": -3.0292298793792725
+  }
+ ],
+ "width": 1500,
+ "height": 1600
+}

@@ -22,6 +22,10 @@ let initPromise = null
 let visible = false
 let hidden = false
 let bannerHeight = 0
+// Whether a banner should be on screen *now*. Showing involves slow native calls
+// (SDK init, consent, ad load); the user may have left the tab screens meanwhile,
+// so every await is followed by a check of this flag.
+let wanted = false
 let sizeListener = null
 
 export function shouldShowAds({ isPro, isNative, config = monetizationConfig }) {
@@ -82,8 +86,9 @@ async function ensureInitialised() {
 
 /** Shows the banner docked at the bottom of the screen, below the tab bar. */
 export async function showBanner() {
+  wanted = true
   try {
-    if (!(await ensureInitialised())) return
+    if (!(await ensureInitialised()) || !wanted) return
     const { AdMob, BannerAdSize, BannerAdPosition } = admob
     if (visible) {
       if (hidden) {
@@ -91,16 +96,18 @@ export async function showBanner() {
         await AdMob.resumeBanner()
         setAdHeight(bannerHeight)
       }
-      return
+    } else {
+      visible = true
+      await AdMob.showBanner({
+        adId: monetizationConfig.ads.bannerAdId,
+        adSize: BannerAdSize.ADAPTIVE_BANNER,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        margin: 0,
+        isTesting: monetizationConfig.ads.useTestIds,
+      })
     }
-    visible = true
-    await AdMob.showBanner({
-      adId: monetizationConfig.ads.bannerAdId,
-      adSize: BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
-      margin: 0,
-      isTesting: monetizationConfig.ads.useTestIds,
-    })
+    // Left the tab screens while the banner was loading: take it away again.
+    if (!wanted) await hideBanner()
   } catch (error) {
     visible = false
     setAdHeight(0)
@@ -109,6 +116,7 @@ export async function showBanner() {
 }
 
 export async function hideBanner() {
+  wanted = false
   setAdHeight(0)
   if (!initialised || !visible || hidden) return
   hidden = true
@@ -121,6 +129,7 @@ export async function hideBanner() {
 
 /** Removes the banner entirely (e.g. after upgrading to Pro). */
 export async function removeBanner() {
+  wanted = false
   setAdHeight(0)
   if (!initialised) return
   visible = false
@@ -130,6 +139,22 @@ export async function removeBanner() {
     await admob.AdMob.removeBanner()
   } catch (error) {
     console.warn('FuelBuddy: remove banner failed', error)
+  }
+}
+
+/**
+ * The banner is a native view that outlives a reload of the web content (e.g. the
+ * startup "Try again" button), leaving an orphaned ad on screens that should have
+ * none. Called once at start-up; tab screens show the banner again when needed.
+ */
+export async function clearLeftoverBanner() {
+  try {
+    const { Capacitor } = await import('@capacitor/core')
+    if (!Capacitor.isNativePlatform()) return
+    const { AdMob } = await import('@capacitor-community/admob')
+    await AdMob.removeBanner()
+  } catch {
+    // No banner to remove.
   }
 }
 

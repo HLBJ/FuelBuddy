@@ -43,7 +43,7 @@ export const monetizationConfig = Object.freeze({
      * not yet configured). Play's price always wins. Change freely — no logic depends on it.
      */
     fallbackDisplayPrice: Object.freeze({ amount: 59, currency: 'ZAR' }),
-    features: Object.freeze(['adFree', 'advancedStatistics']),
+    features: Object.freeze(['adFree', 'advancedStatistics', 'costOfDriving', 'logbookExport']),
   }),
   ads: resolveAdsConfig(env),
 })

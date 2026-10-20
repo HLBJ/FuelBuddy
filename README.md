@@ -1,14 +1,18 @@
 # FuelBuddy
 
-Offline-first fuel tracking for Android. Record fill-ups per vehicle, and see fuel consumption,
-cost per kilometre, monthly spending and trip cost estimates. Everything is stored on the phone in SQLite.
-There are no accounts, no server and no analytics.
+Offline-first fuel tracking for Android, built for South Africa. Record fill-ups per vehicle
+(or scan the fuel slip), and see fuel consumption, cost per kilometre, monthly spending, range left
+and when to fill up next. FuelBuddy knows the official petrol and diesel prices and warns about
+monthly changes. It also has reminders, a route planner with fuel stops and toll plazas, a SARS
+travel logbook, and backup/restore. Everything is stored on the phone in SQLite. There are no
+accounts, no server and no analytics.
 
 - **App ID:** `coza.wacko.fuelbuddy`
 - **Stack:** Ionic 9 + Vue 3 (JavaScript) + Capacitor 8 + `@capacitor-community/sqlite`
 - **Requirements:** [PRODUCT_SPEC.md](PRODUCT_SPEC.md)
 - **Release steps:** [docs/RELEASE.md](docs/RELEASE.md)
 - **Architecture and decisions:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Monthly fuel price update:** [docs/FUEL_PRICES.md](docs/FUEL_PRICES.md)
 
 ## Prerequisites
 

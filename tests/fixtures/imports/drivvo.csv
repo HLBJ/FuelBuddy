@@ -1,0 +1,8 @@
+##Refuelling
+"Odometer (km)","Date","Fuel","Price / L","Total cost","Volume","Filled tank completely","Second fuel","Price / L","Total cost","Volume","Filled tank completely" 2,"Third fuel","Price / L","Total cost","Volume","Filled tank completely" 3,"Fuel efficiency","Gas station","Reason","Notes"
+"11234","2019-10-16 16:08:35","Gas Premium","6.199","58.89","9.5","Yes","","0","0","0","No","","0","0","0","No","25.158 km/L","Br Casa Forte","",""
+"10995","2019-10-09 08:15:02","Gas Premium","6.150","123.00","20.0","Yes","","0","0","0","No","","0","0","0","No","","Shell Boa Viagem","",""
+
+##Expense
+"Odometer (km)","Date","Total cost","Type of expense","Local expense","Reason","Notes"
+"11100","2019-10-12 10:00:00","25.00","Cleaning","Lava Jato","",""

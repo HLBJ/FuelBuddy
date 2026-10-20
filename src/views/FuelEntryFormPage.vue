@@ -31,6 +31,13 @@
       </EmptyState>
 
       <form v-else class="fb-form" novalidate @submit.prevent="save" @keydown.enter="advanceOnEnter">
+        <div v-if="canScan" class="scan">
+          <ion-button expand="block" fill="outline" :disabled="scanning" @click="scan">
+            <ion-spinner v-if="scanning" slot="start" name="crescent" />
+            <ion-icon v-else slot="start" :icon="scanOutline" />
+            {{ scanning ? 'Reading slip…' : 'Scan fuel slip' }}
+          </ion-button>
+        </div>
         <ion-list lines="full">
           <ion-item>
             <ion-select
@@ -69,7 +76,30 @@
               :error-text="errors.odometer"
               :helper-text="odometerHelper"
             />
+            <ion-button
+              v-if="canScan"
+              slot="end"
+              fill="clear"
+              class="odo-scan"
+              :disabled="readingOdometer"
+              aria-label="Read the odometer from a photo"
+              @click="scanOdo"
+            >
+              <ion-spinner v-if="readingOdometer" slot="icon-only" name="crescent" />
+              <ion-icon v-else slot="icon-only" :icon="cameraOutline" />
+            </ion-button>
           </ion-item>
+          <div v-if="odometerChoices.length > 1" class="odo-choices">
+            <span class="fb-muted">Not right? Try</span>
+            <ion-chip
+              v-for="km in odometerChoices.filter((k) => String(k) !== String(form.odometer))"
+              :key="km"
+              outline
+              @click="form.odometer = String(km)"
+            >
+              {{ formatDistance(km) }}
+            </ion-chip>
+          </div>
           <div v-if="warnings.odometer && !errors.odometer" class="fb-warning-text">{{ warnings.odometer }}</div>
 
           <ion-item>
@@ -96,8 +126,15 @@
               placeholder="e.g. 23.45"
               :class="fieldClass('pricePerLitre')"
               :error-text="errors.pricePerLitre"
+              @ion-input="priceSource = 'user'"
             />
           </ion-item>
+          <div v-if="officialHint" class="price-hint fb-muted">
+            <span>{{ officialHint }}</span>
+            <ion-button v-if="canUseOfficial" size="small" fill="clear" @click="useOfficialPrice">
+              Use {{ formatCurrency(official.price, currency) }}
+            </ion-button>
+          </div>
 
           <ion-item lines="full" class="total-row">
             <ion-label>Total cost</ion-label>
@@ -152,11 +189,15 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList,
-  IonPage, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
+  IonChip, IonPage, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
-import { alertCircleOutline, carSportOutline, trashOutline } from 'ionicons/icons'
+import { alertCircleOutline, cameraOutline, carSportOutline, scanOutline, trashOutline } from 'ionicons/icons'
+import { scanOdometer } from '../services/odometerScanService.js'
+import { Capacitor } from '@capacitor/core'
+import { scanSlip } from '../services/slipScanService.js'
 import EmptyState from '../components/EmptyState.vue'
-import { notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
+import { gradeForVehicle, notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
+import { FUEL_GRADES, priceOn } from '../services/fuelPriceService.js'
 import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
 import { useServices } from '../services/appServices.js'
 import { LIMITS } from '../services/validation.js'
@@ -165,6 +206,7 @@ import { calculateTotalCost } from '../services/fuelCalculationService.js'
 import { toIsoDate } from '../services/dateUtils.js'
 import { formatCurrency, formatDistance, toInputValue } from '../services/formatService.js'
 import { useFeedback } from '../composables/useFeedback.js'
+import { maybeAskForReview } from '../services/reviewService.js'
 
 const props = defineProps({ id: { type: String, default: null } })
 const router = useRouter()
@@ -180,6 +222,8 @@ const submitted = ref(false)
 const errors = ref({})
 const warnings = ref({})
 const lastEntry = ref(null)
+/** Where the price came from: 'official' follows the date; 'user'/'last'/'slip' stay put. */
+const priceSource = ref(null)
 
 const form = reactive({
   vehicleId: null,
@@ -206,6 +250,97 @@ const odometerPlaceholder = computed(() =>
 const odometerHelper = computed(() =>
   !isEdit.value && lastEntry.value ? `Last fill-up: ${formatDistance(lastEntry.value.odometer)}` : '',
 )
+
+// Official SA price for this vehicle's fuel on the fill-up date.
+const official = computed(() => {
+  const grade = gradeForVehicle(selectedVehicle.value)
+  return priceOn(state.fuelPrices, { date: form.date, region: state.settings.fuelRegion, grade })
+})
+const officialHint = computed(() => {
+  const o = official.value
+  if (!o) return ''
+  const grade = FUEL_GRADES[gradeForVehicle(selectedVehicle.value)]
+  const where = state.settings.fuelRegion === 'coastal' ? 'Coastal' : 'Gauteng'
+  const price = formatCurrency(o.price, currency.value)
+  return o.regulated
+    ? `${where} ${grade.short} price on this date: ${price}. Prices vary slightly by town.`
+    : `Wholesale ${grade.label.toLowerCase()}: ${price}. Pumps charge a little more.`
+})
+const canUseOfficial = computed(() =>
+  Boolean(official.value?.regulated) && parseDecimal(form.pricePerLitre) !== official.value.price,
+)
+
+function useOfficialPrice() {
+  form.pricePerLitre = toInputValue(official.value.price)
+  priceSource.value = 'official'
+}
+
+// An official price follows the date and vehicle until the user types their own.
+watch(official, (o) => {
+  if (!isEdit.value && priceSource.value === 'official' && o?.regulated) form.pricePerLitre = toInputValue(o.price)
+})
+
+// Slip scanning: photo → on-device text recognition → fill in what was found.
+const canScan = computed(() => !isEdit.value && Capacitor.isNativePlatform())
+const scanning = ref(false)
+
+async function scan() {
+  scanning.value = true
+  try {
+    const slip = await scanSlip({ today })
+    if (!slip) return // cancelled
+    const filled = []
+    if (slip.litres !== null) { form.litres = toInputValue(slip.litres); filled.push('litres') }
+    if (slip.pricePerLitre !== null) {
+      form.pricePerLitre = toInputValue(slip.pricePerLitre)
+      priceSource.value = 'slip'
+      filled.push('price')
+    }
+    if (slip.date !== null) { form.date = slip.date; filled.push('date') }
+    if (slip.station !== null && !form.fuelStation) { form.fuelStation = slip.station; filled.push('station') }
+    if (!filled.length) {
+      feedback.error("Couldn't read this slip. Try a sharp, well-lit photo, or type the numbers in.")
+      return
+    }
+    const total = calculateTotalCost(parseDecimal(form.litres), parseDecimal(form.pricePerLitre))
+    const mismatch = slip.total !== null && total !== null && Math.abs(total - slip.total) > Math.max(0.01 * slip.total, 0.1)
+    feedback.toast(
+      mismatch
+        ? `Filled in ${filled.join(', ')}. The slip total was ${formatCurrency(slip.total, currency.value)}; please check the numbers.`
+        : `Filled in ${filled.join(', ')} from the slip. Check them, then add your odometer.`,
+      mismatch ? 'warning' : 'success',
+      4000,
+    )
+  } catch (error) {
+    feedback.error(`Couldn't scan the slip: ${error.message}`)
+  } finally {
+    scanning.value = false
+  }
+}
+
+// Odometer from a photo of the dashboard; the user confirms or picks another number.
+const readingOdometer = ref(false)
+const odometerChoices = ref([])
+
+async function scanOdo() {
+  readingOdometer.value = true
+  try {
+    const lastOdometer = Math.max(lastEntry.value?.odometer ?? 0, selectedVehicle.value?.currentOdometer ?? 0) || null
+    const result = await scanOdometer({ lastOdometer })
+    if (!result) return
+    if (result.best === null) {
+      feedback.error("Couldn't find the odometer reading. Try a closer, sharper photo of the display.")
+      return
+    }
+    form.odometer = String(result.best)
+    odometerChoices.value = result.candidates
+    feedback.toast(`Odometer ${formatDistance(result.best)}. Please check it.`, 'success', 2500)
+  } catch (error) {
+    feedback.error(`Couldn't read the photo: ${error.message}`)
+  } finally {
+    readingOdometer.value = false
+  }
+}
 
 function fieldClass(field) {
   return { 'ion-invalid': Boolean(errors.value[field]), 'ion-touched': Boolean(errors.value[field]) }
@@ -239,8 +374,12 @@ onMounted(async () => {
     } else {
       form.vehicleId = state.activeVehicleId
       await loadLastEntry()
-      // Pre-fill the price from the previous fill-up; the user can change it.
-      if (lastEntry.value?.pricePerLitre) form.pricePerLitre = toInputValue(lastEntry.value.pricePerLitre)
+      // Pre-fill the official petrol price, else the previous fill-up's; the user can change it.
+      if (official.value?.regulated) useOfficialPrice()
+      else if (lastEntry.value?.pricePerLitre) {
+        form.pricePerLitre = toInputValue(lastEntry.value.pricePerLitre)
+        priceSource.value = 'last'
+      }
     }
   } catch (error) {
     feedback.error(error.message)
@@ -292,6 +431,9 @@ async function save() {
     await notifyDataChanged()
     feedback.success(isEdit.value ? 'Fill-up updated' : 'Fill-up saved')
     router.back()
+    // After a new fill-up (not an edit), maybe ask for a Play Store rating, once the
+    // screen has settled back on the previous page.
+    if (!isEdit.value) setTimeout(() => maybeAskForReview(services), 1500)
   } catch (error) {
     if (error.errors) errors.value = error.errors
     feedback.error(error.message)
@@ -331,6 +473,38 @@ async function remove() {
   font-size: 0.78rem;
   margin: 2px 0 0;
   white-space: normal;
+}
+.odo-scan {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.odo-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 0 16px;
+  font-size: 0.8rem;
+}
+.scan {
+  padding: 12px 16px 4px;
+}
+.scan ion-button {
+  margin: 0;
+  --border-radius: 12px;
+}
+.price-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  padding: 4px 8px 0 16px;
+  line-height: 1.35;
+}
+.price-hint ion-button {
+  flex-shrink: 0;
+  margin: 0;
 }
 .field-error {
   color: var(--ion-color-danger);

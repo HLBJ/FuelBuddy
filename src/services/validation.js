@@ -93,7 +93,11 @@ export function validateVehicle(input, context = {}) {
   return {
     valid: Object.keys(errors).length === 0,
     errors,
-    value: { name, make, model, registration, year, fuelType, tankCapacity, currentOdometer },
+    value: {
+      name, make, model, registration, year, fuelType, tankCapacity, currentOdometer,
+      catalogKey: typeof input.catalogKey === 'string' && /^[a-z0-9-]{1,80}$/.test(input.catalogKey) ? input.catalogKey : null,
+      tollClass: [1, 2, 3, 4].includes(Number(input.tollClass)) ? Number(input.tollClass) : 1,
+    },
   }
 }
 
