@@ -19,6 +19,9 @@ export const SETTING_DEFAULTS = Object.freeze({
   /** Last downloaded price file and when it was fetched (device-only, not backed up). */
   fuelPricesCache: null,
   fuelPricesFetchedAt: null,
+  /** Last downloaded toll tariff file and when it was fetched (device-only, not backed up). */
+  tollTariffsCache: null,
+  tollTariffsFetchedAt: null,
 })
 
 /**

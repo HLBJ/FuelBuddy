@@ -237,9 +237,9 @@ watch(() => [state.activeVehicleId, state.revision], async () => {
 // Toll fees for the vehicle's class (changeable here for this trip).
 const tollClass = ref(1)
 watch(() => activeVehicle.value?.tollClass, (c) => { tollClass.value = c || 1 }, { immediate: true })
-const pricedTolls = computed(() => routeTolls(tolls.value, tollClass.value, { totalKm: route.value?.distanceKm ?? null }))
+const pricedTolls = computed(() => routeTolls(tolls.value, tollClass.value, { totalKm: route.value?.distanceKm ?? null }, state.tollTariffs))
 const tollClassLabel = computed(() => `class ${tollClass.value}`)
-const tariffYear = (tariffsEffectiveFrom() || '').slice(0, 4)
+const tariffYear = computed(() => (tariffsEffectiveFrom(state.tollTariffs) || '').slice(0, 4))
 
 const consumptionFromHistory = computed(() => history.value.consumption !== null)
 const consumption = computed(() => history.value.consumption ?? TYPICAL_CONSUMPTION)

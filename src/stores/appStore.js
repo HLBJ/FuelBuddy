@@ -10,6 +10,7 @@ import {
   PRICE_ALERT_NOTIFICATION_ID, bundledPriceData, gradeForFuelType, loadFuelPrices, priceAlertPlan, upcomingChange,
 } from '../services/fuelPriceService.js'
 import { priceAlertNotifier } from '../services/notificationService.js'
+import { chooseTariffs, loadTollTariffs } from '../services/tollTariffs.js'
 
 /**
  * Shared application state. Holds the vehicle list, the active vehicle, settings
@@ -28,6 +29,8 @@ const state = reactive({
   now: Date.now(),
   /** Official SA fuel prices (bundled, plus the hosted file when configured). */
   fuelPrices: markRaw(bundledPriceData()),
+  /** SANRAL toll tariffs in effect (bundled, or newer ones from the hosted file). */
+  tollTariffs: markRaw(chooseTariffs([])),
 })
 
 setInterval(() => { state.now = Date.now() }, 60_000)
@@ -108,10 +111,15 @@ export function priceChangeForVehicle(vehicle, today = toIsoDate(new Date(state.
   return upcomingChange(state.fuelPrices, { today, region: state.settings.fuelRegion, grade: gradeForVehicle(vehicle) })
 }
 
-/** Loads newer prices (if a hosted file is configured) and re-plans the alert. */
+/** Loads newer fuel prices and toll tariffs (from the hosted files) and re-plans the price alert. */
 export async function refreshFuelPrices() {
   try {
     state.fuelPrices = markRaw(await loadFuelPrices(useServices().settings))
+  } catch {
+    // keep what we have
+  }
+  try {
+    state.tollTariffs = markRaw(await loadTollTariffs(useServices().settings))
   } catch {
     // keep what we have
   }

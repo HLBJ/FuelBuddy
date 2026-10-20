@@ -20,7 +20,7 @@ export const BACKUP_TABLES = Object.freeze(['vehicles', 'fuel_entries', 'reminde
  * Settings that belong to this device and are neither backed up nor replaced by a
  * restore. Pro is restored from Google Play, not from a file.
  */
-const PROTECTED_SETTINGS = Object.freeze(['proUnlocked', 'fuelPricesCache', 'fuelPricesFetchedAt'])
+const PROTECTED_SETTINGS = Object.freeze(['proUnlocked', 'fuelPricesCache', 'fuelPricesFetchedAt', 'tollTariffsCache', 'tollTariffsFetchedAt'])
 
 /** Backed up, but a restore never replaces this phone's own value (so a backup can't restart the trial). */
 const KEEP_IF_PRESENT = Object.freeze(['proTrialStartedAt'])

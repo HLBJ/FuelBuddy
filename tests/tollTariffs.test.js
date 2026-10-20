@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import poi from '../src/data/poi-za.json'
-import { isRoadToll, routeTolls, tariffsEffectiveFrom, tollFee } from '../src/services/tollTariffs.js'
+import { TariffDataError, isRoadToll, loadTollTariffs, routeTolls, tariffsEffectiveFrom, tollFee, validateTariffData } from '../src/services/tollTariffs.js'
 
 describe('toll tariffs (SANRAL 2026)', () => {
   it('prices plazas by class, including spelling variants from the map data', () => {
@@ -38,5 +38,37 @@ describe('toll tariffs (SANRAL 2026)', () => {
     const r = routeTolls(route, 1, { totalKm: 570 })
     expect(r.plazas.map((p) => [p.name, p.optional])).toEqual([['Mooi Plaza', false], ['Treverton Plaza', true], ['Bergville', false]])
     expect(r.total).toBe(100) // Mooi 70 + Bergville 30, at the start
+  })
+})
+
+describe('toll tariffs from the hosted file', () => {
+  const memorySettings = () => {
+    const store = {}
+    return { store, get: async (k) => store[k] ?? null, set: async (k, v) => { store[k] = v } }
+  }
+  const file2027 = { format: 'fuelbuddy-toll-tariffs', version: 1, effectiveFrom: '2027-03-01', plazas: [{ names: ['Huguenot'], road: 'N1', classes: [57, 158, 247, 400] }] }
+  const config = { remoteUrl: 'https://drive.google.com/file/d/1QGH-Pi4a18hqCM4tIy1LXvKNHkt8zh2g/view', refreshHours: 24, timeoutMs: 1000 }
+
+  it('switches to new tariffs on their effective date, and keeps them offline', async () => {
+    const settings = memorySettings()
+    const feb = Date.parse('2027-02-20T08:00:00Z')
+    const early = await loadTollTariffs(settings, { getJson: async () => file2027, now: feb, config })
+    expect(tollFee('Huguenot', 1, early)).toBe(54.5) // uploaded early: 2026 prices still apply
+    expect(settings.store.tollTariffsCache).toEqual(file2027)
+
+    const offline = async () => { throw new Error('offline') }
+    const march = await loadTollTariffs(settings, { getJson: offline, now: Date.parse('2027-03-02T08:00:00Z'), config })
+    expect(tollFee('Huguenot', 1, march)).toBe(57)
+    expect(tariffsEffectiveFrom(march)).toBe('2027-03-01')
+    expect(tollFee('Huguenot', 1)).toBe(57) // now the default for lookups too
+    await loadTollTariffs(memorySettings(), { config: { ...config, remoteUrl: null } }) // back to the bundled set
+    expect(tollFee('Huguenot', 1)).toBe(54.5)
+  })
+
+  it('ignores a broken file and keeps the bundled tariffs', async () => {
+    const t = await loadTollTariffs(memorySettings(), { getJson: async () => ({ format: 'x' }), now: Date.parse('2027-04-01'), config })
+    expect(tollFee('Huguenot', 1, t)).toBe(54.5)
+    expect(() => validateTariffData({ ...file2027, plazas: [{ names: ['X'], classes: [1, 2, 3] }] })).toThrow(TariffDataError)
+    expect(() => validateTariffData({ ...file2027, plazas: [{ names: ['X'], classes: [1, 2, 3, 99999] }] })).toThrow(/Implausible/)
   })
 })

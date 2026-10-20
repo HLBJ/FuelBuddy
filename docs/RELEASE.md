@@ -276,8 +276,8 @@ Organisation accounts can skip the 12-tester rule, but a short closed test is st
 - **Updates:** increase `versionCode` every time, build with `npm run android:release`, and
   upload to internal testing first, then production.
 - **Android vitals:** fix crashes and ANRs that show up there.
-- **Toll tariffs (every March):** SANRAL publishes new tariffs from 1 March. Update
-  `src/data/toll-tariffs-za.json` (the poster is linked in the file) and release an update.
+- **Toll tariffs (every February):** upload SANRAL's new prices to the Google Drive toll
+  file before 1 March. See [TOLL_TARIFFS.md](TOLL_TARIFFS.md).
 - **Target API level:** Google requires apps to target a recent Android version (currently
   API 36). Each year, update the target SDK when Play Console warns you.
 

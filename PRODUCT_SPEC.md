@@ -256,7 +256,8 @@ SANRAL's tariffs (from 1 March each year; 2026 data in src/data/toll-tariffs-za.
 VAT) price each plaza on a planned route for the vehicle's toll class (vehicles.toll_class,
 changeable per trip). Ramp plazas are charged only near the start or end of the trip;
 elsewhere they are listed as "only if you use this exit". Totals are one way, without e-tag
-discounts. Update the file every March.
+discounts. New tariffs arrive from a hosted copy on Google Drive (checked daily, applied from their
+effectiveFrom date; see docs/TOLL_TARIFFS.md).
 
 ### 6.16 SARS travel logbook (logging free, export Pro)
 Trips per vehicle: date, start/end odometer, business or private, from, destination and

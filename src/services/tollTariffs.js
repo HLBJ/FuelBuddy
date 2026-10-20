@@ -1,5 +1,8 @@
 import tariffData from '../data/toll-tariffs-za.json'
 import { roundTo } from './numberUtils.js'
+import { isValidIsoDate, toIsoDate } from './dateUtils.js'
+import { loadHostedJson } from './remoteData.js'
+import { tollTariffsConfig } from '../config/tollTariffs.js'
 
 /**
  * Toll fees for plazas on a planned route, from SANRAL's published tariffs (see
@@ -21,9 +24,60 @@ export function prepareTariffs(data) {
   return { byName, notTolls: new Set((data?.notTolls || []).map(norm)), effectiveFrom: data?.effectiveFrom || null, source: data?.source || '' }
 }
 
-let prepared = null
-const tariffs = () => (prepared ??= prepareTariffs(tariffData))
-export const tariffsEffectiveFrom = () => tariffs().effectiveFrom
+export const TARIFF_FORMAT = 'fuelbuddy-toll-tariffs'
+
+export class TariffDataError extends Error {}
+
+/** Checks a tariff file (bundled or downloaded); throws TariffDataError when it isn't usable. */
+export function validateTariffData(json) {
+  if (!json || json.format !== TARIFF_FORMAT || !Array.isArray(json.plazas) || !json.plazas.length) {
+    throw new TariffDataError('Not FuelBuddy toll tariff data.')
+  }
+  if (!isValidIsoDate(json.effectiveFrom)) throw new TariffDataError('The tariffs have no valid effectiveFrom date.')
+  for (const plaza of json.plazas) {
+    if (!Array.isArray(plaza.names) || !plaza.names.length || plaza.names.some((n) => typeof n !== 'string' || !n.trim())) {
+      throw new TariffDataError('A plaza has no name.')
+    }
+    if (!Array.isArray(plaza.classes) || plaza.classes.length !== 4) throw new TariffDataError(`${plaza.names[0]} needs four class prices.`)
+    for (const fee of plaza.classes) {
+      if (fee !== null && !(typeof fee === 'number' && fee >= 0 && fee <= 5000)) throw new TariffDataError(`Implausible price at ${plaza.names[0]}.`)
+    }
+  }
+  return json
+}
+
+const bundled = prepareTariffs(validateTariffData(tariffData))
+
+/** The newest tariff set already in effect today (a file uploaded early waits for its date). */
+export function chooseTariffs(sets, today = toIsoDate()) {
+  const usable = sets.filter(Boolean).filter((t) => !t.effectiveFrom || t.effectiveFrom <= today)
+  return usable.sort((a, b) => String(b.effectiveFrom).localeCompare(String(a.effectiveFrom)))[0] || bundled
+}
+
+let active = bundled
+const tariffs = () => active
+export const tariffsEffectiveFrom = (t = tariffs()) => t.effectiveFrom
+
+/**
+ * Bundled tariffs, or newer ones from the hosted file once they take effect. Never throws.
+ * @returns {Promise<object>} prepared tariffs (also used by default from then on)
+ */
+export async function loadTollTariffs(settings, { getJson, now = Date.now(), config = tollTariffsConfig } = {}) {
+  const remote = await loadHostedJson(
+    settings,
+    {
+      url: config.remoteUrl,
+      cacheKey: 'tollTariffsCache',
+      fetchedKey: 'tollTariffsFetchedAt',
+      refreshHours: config.refreshHours,
+      timeoutMs: config.timeoutMs,
+      validate: validateTariffData,
+    },
+    { getJson, now },
+  )
+  active = chooseTariffs([bundled, remote && prepareTariffs(remote)], toIsoDate(new Date(now)))
+  return active
+}
 
 /** Park entrance gates are tagged as toll booths in map data, but aren't road tolls. */
 export function isRoadToll(name, t = tariffs()) {
