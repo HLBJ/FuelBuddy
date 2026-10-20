@@ -38,12 +38,20 @@
         <div class="fb-card summary fb-tabular">
           <div><span class="fb-muted">Distance</span><strong>{{ formatDistance(route.distanceKm) }}</strong></div>
           <div><span class="fb-muted">Drive time</span><strong>{{ formatDuration(route.durationMin) }}</strong></div>
-          <div><span class="fb-muted">Toll plazas</span><strong>{{ tolls.length }}</strong></div>
+          <div>
+            <span class="fb-muted">Tolls ({{ tollClassLabel }})</span>
+            <strong>{{ pricedTolls.plazas.length ? formatCurrency(pricedTolls.total, currency) : 'None' }}</strong>
+          </div>
           <div v-if="estimate"><span class="fb-muted">Fuel (est.)</span><strong>{{ formatLitres(estimate.fuelRequired, 0) }} · {{ formatCurrency(estimate.cost, currency) }}</strong></div>
+          <div v-if="estimate" class="total-row">
+            <span class="fb-muted">Fuel and tolls</span>
+            <strong>{{ formatCurrency(estimate.cost + pricedTolls.total, currency) }}</strong>
+          </div>
         </div>
         <p v-if="estimate" class="note fb-muted">
-          Estimate at {{ formatConsumption(estimate.consumption) }} and {{ formatPricePerLitre(estimate.fuelPrice, currency) }}
-          {{ consumptionFromHistory ? '(your history)' : '(typical car)' }}. Toll fees are not included.
+          Fuel at {{ formatConsumption(estimate.consumption) }} and {{ formatPricePerLitre(estimate.fuelPrice, currency) }}
+          {{ consumptionFromHistory ? '(your history)' : '(typical car)' }}. Tolls are one way, at SANRAL's {{ tariffYear }} prices
+          without e-tag discounts{{ pricedTolls.unknown ? `; ${pricedTolls.unknown} plaza${pricedTolls.unknown === 1 ? "'s" : "s'"} price unknown` : '' }}.
         </p>
 
         <!-- 2. How many stops -->
@@ -113,13 +121,30 @@
         </div>
 
         <!-- Toll plazas -->
-        <div v-if="tolls.length" class="fb-card">
-          <h3 class="card-title">Toll plazas on this route</h3>
+        <div v-if="pricedTolls.plazas.length" class="fb-card">
+          <div class="toll-head">
+            <h3 class="card-title">Toll plazas on this route</h3>
+            <ion-select
+              :value="tollClass"
+              interface="action-sheet"
+              aria-label="Vehicle toll class"
+              :selected-text="`Class ${tollClass}`"
+              class="class-select"
+              @ion-change="(e) => (tollClass = e.detail.value)"
+            >
+              <ion-select-option v-for="c in TOLL_CLASSES" :key="c.value" :value="c.value">{{ c.label }}: {{ c.description }}</ion-select-option>
+            </ion-select>
+          </div>
           <ul class="tolls fb-tabular">
-            <li v-for="t in tolls" :key="t.id">
+            <li v-for="t in pricedTolls.plazas" :key="t.id">
               <span class="toll-badge">T</span>
-              <span>{{ t.name || 'Toll plaza' }}</span>
-              <span class="fb-muted">{{ formatDistance(t.alongKm) }}</span>
+              <span>{{ t.name || 'Toll plaza' }}<span class="fb-muted"> · {{ formatDistance(t.alongKm) }}</span></span>
+              <strong>{{ t.fee === null ? '?' : formatCurrency(t.fee, currency) }}</strong>
+            </li>
+            <li class="toll-total">
+              <span />
+              <span>Total one way</span>
+              <strong>{{ formatCurrency(pricedTolls.total, currency) }}</strong>
             </li>
           </ul>
         </div>
@@ -147,8 +172,7 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import {
-  IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon,
-  IonItem, IonLabel, IonList, IonPage, IonSpinner, IonTitle, IonToolbar,
+  IonAccordion, IonAccordionGroup, IonBackButton, IonButton, IonButtons, IonCheckbox, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonPage, IonSelect, IonSelectOption, IonSpinner, IonTitle, IonToolbar,
 } from '@ionic/vue'
 import { addOutline, closeOutline, navigateOutline, removeOutline, warningOutline } from 'ionicons/icons'
 import PlaceSearch from '../components/PlaceSearch.vue'
@@ -162,6 +186,7 @@ import {
   PLANNER_LIMITS, chooseBestStops, googleMapsDirectionsUrl, isSamePlace, legsForStops, stationsAlongRoute,
   suggestStopCount, tollPlazasAlongRoute, vehicleRangeKm,
 } from '../services/routePlannerService.js'
+import { TOLL_CLASSES, routeTolls, tariffsEffectiveFrom } from '../services/tollTariffs.js'
 import { estimateTrip, suggestTripInputs } from '../services/tripCalculationService.js'
 import {
   formatConsumption, formatCurrency, formatDate, formatDistance, formatLitres, formatNumber, formatPricePerLitre,
@@ -205,6 +230,13 @@ watch(() => [state.activeVehicleId, state.revision], async () => {
   const v = activeVehicle.value
   history.value = v ? suggestTripInputs(await useServices().fuel.listByVehicle(v.id)) : { consumption: null, fuelPrice: null }
 }, { immediate: true })
+
+// Toll fees for the vehicle's class (changeable here for this trip).
+const tollClass = ref(1)
+watch(() => activeVehicle.value?.tollClass, (c) => { tollClass.value = c || 1 }, { immediate: true })
+const pricedTolls = computed(() => routeTolls(tolls.value, tollClass.value))
+const tollClassLabel = computed(() => `class ${tollClass.value}`)
+const tariffYear = (tariffsEffectiveFrom() || '').slice(0, 4)
 
 const consumptionFromHistory = computed(() => history.value.consumption !== null)
 const consumption = computed(() => history.value.consumption ?? TYPICAL_CONSUMPTION)
@@ -485,5 +517,25 @@ function detourText(km) {
   font-size: 0.7rem;
   margin: 0 20px 24px;
   text-align: center;
+}
+.total-row {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--fb-border);
+  padding-top: 8px;
+}
+.toll-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.class-select {
+  max-width: 130px;
+  font-size: 0.85rem;
+  color: var(--ion-color-primary);
+}
+.toll-total {
+  border-top: 1px solid var(--fb-border);
+  font-weight: 600;
 }
 </style>
