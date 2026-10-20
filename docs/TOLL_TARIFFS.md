@@ -35,7 +35,7 @@ installs start with the latest tariffs.
 
 1. Upload `src/data/toll-tariffs-za.json` to your Google Drive.
 2. Share it as **Anyone with the link** (Viewer) and copy the link.
-3. Give Claude the link. It goes in `src/config/tollTariffs.js` as
-   `DEFAULT_TOLL_TARIFFS_URL`, or in `.env.production` as `VITE_TOLL_TARIFFS_URL`.
+3. Done: the link is set as `DEFAULT_TOLL_TARIFFS_URL` in `src/config/tollTariffs.js`
+   (`VITE_TOLL_TARIFFS_URL` in `.env.production` overrides it).
 4. Each year, replace the file with **File information → Manage versions → Upload new
    version**, so the link never changes.
