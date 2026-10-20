@@ -23,6 +23,7 @@ describe('odometer reading', () => {
 
   it('reads from plain text and returns nothing when there is no number', () => {
     expect(parseOdometer({ text: 'ODO 152,030 km' }).best).toBe(152030)
+    expect(parseOdometer({ text: 'ODO  76  512 km' }).best).toBe(76512) // wide digit gaps on digital displays
     expect(parseOdometer({ text: 'Check engine' })).toEqual({ best: null, candidates: [] })
   })
 })
