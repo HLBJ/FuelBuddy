@@ -65,7 +65,7 @@
               @ion-change="(e) => chooseVariant(e.detail.value)"
             >
               <ion-select-option v-for="v in variants" :key="v.key" :value="v.key">
-                {{ v.variant }}{{ v.years ? ` (${v.years})` : '' }}
+                {{ v.model.toLowerCase() !== form.model.trim().toLowerCase() ? `${v.model} ` : '' }}{{ v.variant }}{{ v.years ? ` (${v.years})` : '' }}
               </ion-select-option>
             </ion-select>
           </ion-item>

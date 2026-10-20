@@ -230,11 +230,33 @@ where litres × price ≈ total, and fills litres, price, date and station. Unce
 are left for the user; a mismatch with the slip total is flagged. No camera or storage
 permission.
 
+### 6.14b Odometer scanning (free)
+A camera button on the odometer fields (fill-up and logbook trip) reads the reading from a
+photo of the dashboard with on-device ML Kit. Numbers are scored by digit count, size, a
+nearby "ODO" label, trip/range/clock/temperature hints and the vehicle's last reading; the
+best fills the field and the next candidates are offered as chips.
+
 ### 6.15 Backup and restore (free)
 Settings → Back up data writes one JSON file (all tables + settings, schema version) and
 opens the share sheet (Google Drive, email, Files). Restore picks a file, shows what it
 contains, and replaces all data in one transaction (a bad file changes nothing). The Pro
 purchase is never restored from a file.
+
+### 6.15b Vehicle catalogue and consumption comparison (free)
+src/data/vehicles-za.json holds ~270 popular SA cars and bakkies (make, model, years,
+engine, fuel type, tank litres, official combined L/100 km, source URL; researched October
+2026). The vehicle form suggests makes and models, offers an engine picker that fills in
+fuel type and tank size, and stores the match (vehicles.catalog_key). Statistics compares
+measured consumption with the official figure, allowing for the usual real-world gap (20–40%
+for NEDC-style figures, 10–25% for WLTP). There is no comparison with other users: the app
+has no server.
+
+### 6.15c Toll fees (free)
+SANRAL's tariffs (from 1 March each year; 2026 data in src/data/toll-tariffs-za.json, incl.
+VAT) price each plaza on a planned route for the vehicle's toll class (vehicles.toll_class,
+changeable per trip). Ramp plazas are charged only near the start or end of the trip;
+elsewhere they are listed as "only if you use this exit". Totals are one way, without e-tag
+discounts. Update the file every March.
 
 ### 6.16 SARS travel logbook (logging free, export Pro)
 Trips per vehicle: date, start/end odometer, business or private, from, destination and

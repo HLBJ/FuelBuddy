@@ -25,21 +25,29 @@ export function makes(list = catalog()) {
   return [...new Set(list.map((v) => v.make))].sort((a, b) => a.localeCompare(b))
 }
 
+const MAKE_ALIASES = { vw: 'volkswagen', merc: 'mercedesbenz', mercedes: 'mercedesbenz', benz: 'mercedesbenz', chev: 'chevrolet', greatwall: 'gwm' }
+const resolveMake = (make) => {
+  const m = norm(make)
+  return MAKE_ALIASES[m] || m
+}
+
 /** Models of a make (matched loosely: "vw" finds Volkswagen too). */
 export function modelsFor(make, list = catalog()) {
-  const m = norm(make)
-  if (!m) return []
-  const aliases = { vw: 'volkswagen', merc: 'mercedesbenz', mercedes: 'mercedesbenz', chev: 'chevrolet' }
-  const target = aliases[m] || m
+  const target = resolveMake(make)
+  if (!target) return []
   return [...new Set(list.filter((v) => norm(v.make) === target).map((v) => v.model))].sort((a, b) => a.localeCompare(b))
 }
 
 /** Engine variants for a make and model, with tank size and rated consumption. */
 export function variantsFor(make, model, list = catalog()) {
-  const mk = norm(make)
+  const mk = resolveMake(make)
   const md = norm(model)
   if (!mk || !md) return []
-  return list.filter((v) => norm(v.make) === mk && norm(v.model) === md)
+  const ofMake = list.filter((v) => norm(v.make) === mk)
+  const exact = ofMake.filter((v) => norm(v.model) === md)
+  if (exact.length) return exact
+  // "Golf" finds "Golf 7" and "Golf 8"; "Quantum" finds "Quantum / HiAce".
+  return md.length >= 3 ? ofMake.filter((v) => norm(v.model).startsWith(md)) : []
 }
 
 export function findByKey(key, list = catalog()) {
@@ -74,10 +82,13 @@ export function compareWithRated(measured, entry) {
   const rated = entry?.combinedL100
   if (!(measured > 0) || !(rated > 0)) return null
   const diffPercent = roundTo(((measured - rated) / rated) * 100, 0)
-  const typicalMax = entry.cycle === 'WLTP' ? 25 : 40
+  const wltp = entry.cycle === 'WLTP'
+  const typicalMin = wltp ? 10 : 20
+  const typicalMax = wltp ? 25 : 40
   let verdict
   if (diffPercent <= 0) verdict = 'better' // better than the official figure
+  else if (diffPercent < typicalMin) verdict = 'good' // closer to it than most drivers get
   else if (diffPercent <= typicalMax) verdict = 'typical'
   else verdict = 'high'
-  return { measured: roundTo(measured, 1), rated, cycle: entry.cycle || null, diffPercent, typicalMax, verdict }
+  return { measured: roundTo(measured, 1), rated, cycle: entry.cycle || null, diffPercent, typicalMin, typicalMax, verdict }
 }

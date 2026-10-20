@@ -16,7 +16,7 @@
     <p class="verdict">{{ verdictText }}</p>
     <p class="fb-muted small">
       {{ entry.make }} {{ entry.model }} {{ entry.variant }}: official combined figure{{ result.cycle ? ` (${result.cycle} test)` : '' }}, in L/100 km.
-      Official figures come from a lab test; real-world driving is usually {{ result.typicalMax === 25 ? '10–25%' : '20–40%' }} higher.
+      Official figures come from a lab test; real-world driving is usually {{ result.typicalMin }}–{{ result.typicalMax }}% higher.
     </p>
   </div>
 </template>
@@ -35,6 +35,7 @@ const widthOf = (v) => Math.round((v / Math.max(props.result.measured, props.res
 const verdictText = computed(() => {
   const { diffPercent, verdict } = props.result
   if (verdict === 'better') return `You're doing better than the official figure${diffPercent < 0 ? ` by ${Math.abs(diffPercent)}%` : ''}. Excellent driving!`
+  if (verdict === 'good') return `Only ${diffPercent}% above the official figure: better than most drivers manage on real roads.`
   if (verdict === 'typical') return `You use ${diffPercent}% more than the official figure, which is normal for real-world driving.`
   return `You use ${diffPercent}% more than the official figure. Check tyre pressures, roof racks and heavy loads, and try smoother acceleration.`
 })
@@ -72,6 +73,7 @@ const verdictText = computed(() => {
 }
 .fill.you,
 .fill.you.typical,
+.fill.you.good,
 .fill.you.better {
   background: var(--ion-color-primary);
 }

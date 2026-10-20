@@ -27,9 +27,9 @@
         log is never sent anywhere.
       </p>
 
-      <h2>Scanning fuel slips</h2>
+      <h2>Scanning fuel slips and odometers</h2>
       <p>
-        When you tap "Scan fuel slip", you take a photo with Android's camera app or pick one with Android's photo
+        When you scan a fuel slip or your odometer, you take a photo with Android's camera app or pick one with Android's photo
         picker. The text on the slip is read on your phone by Google's ML Kit; the photo is not uploaded and is
         not kept by FuelBuddy. FuelBuddy does not have camera or photo-library permission.
       </p>

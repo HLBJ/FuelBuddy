@@ -32,7 +32,8 @@ describe('vehicle catalogue', () => {
   })
 
   it('compares measured consumption with the official figure, allowing for real-world driving', () => {
-    expect(compareWithRated(6.9, list[0])).toEqual({ measured: 6.9, rated: 5.9, cycle: 'NEDC', diffPercent: 17, typicalMax: 40, verdict: 'typical' })
+    expect(compareWithRated(6.9, list[0])).toEqual({ measured: 6.9, rated: 5.9, cycle: 'NEDC', diffPercent: 17, typicalMin: 20, typicalMax: 40, verdict: 'good' })
+    expect(compareWithRated(7.6, list[0]).verdict).toBe('typical')
     expect(compareWithRated(5.5, list[0]).verdict).toBe('better')
     expect(compareWithRated(9.5, list[4])).toMatchObject({ diffPercent: 36, typicalMax: 25, verdict: 'high' })
     expect(compareWithRated(null, list[0])).toBeNull()
@@ -50,5 +51,31 @@ describe('vehicle catalogue match and toll class', () => {
     expect(v).toMatchObject({ catalogKey: 'volkswagen-polo-vivo-1-4-petrol-2018-2024', tollClass: 2 })
     const updated = await vehicles.update(v.id, { ...vehicleInput(), catalogKey: 'Not A Key!', tollClass: 9 })
     expect(updated).toMatchObject({ catalogKey: null, tollClass: 1 })
+  })
+})
+
+import { catalog } from '../src/services/vehicleCatalog.js'
+
+describe('bundled South African vehicle data', () => {
+  const real = catalog()
+
+  it('is complete enough to be useful and has sane values with sources', () => {
+    expect(real.length).toBeGreaterThan(200)
+    for (const v of real) {
+      expect(['petrol', 'diesel', 'hybrid']).toContain(v.fuelType)
+      if (v.tankLitres !== null) expect(v.tankLitres).toBeGreaterThanOrEqual(20)
+      if (v.tankLitres !== null) expect(v.tankLitres).toBeLessThanOrEqual(160)
+      if (v.combinedL100 !== null) expect(v.combinedL100).toBeGreaterThan(2)
+      expect(v.source).toMatch(/^https?:\/\//)
+    }
+    expect(new Set(real.map((v) => v.key)).size).toBe(real.length) // keys are unique
+  })
+
+  it('knows the best sellers', () => {
+    expect(suggestTank({ make: 'VW', model: 'Polo Vivo', fuelType: 'petrol' })).toMatchObject({ tankLitres: 45 })
+    expect(suggestTank({ make: 'Toyota', model: 'Hilux', fuelType: 'diesel' })).toMatchObject({ tankLitres: 80 })
+    expect(suggestTank({ make: 'Toyota', model: 'Corolla Cross', fuelType: 'hybrid' })).toMatchObject({ tankLitres: 36 })
+    expect(variantsFor('Volkswagen', 'Golf').length).toBeGreaterThan(2) // matches Golf 7, Golf 8 …
+    expect(makes()).toEqual(expect.arrayContaining(['Toyota', 'Volkswagen', 'Suzuki', 'Ford', 'Isuzu', 'Chery', 'Haval']))
   })
 })
