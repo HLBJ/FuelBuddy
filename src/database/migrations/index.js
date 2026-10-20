@@ -116,6 +116,14 @@ export const migrations = [
       `CREATE INDEX IF NOT EXISTS idx_expenses_vehicle_date ON expenses (vehicle_id, date)`,
     ],
   },
+  {
+    version: 5,
+    description: 'Vehicle catalogue match (tank size and rated consumption) and toll class',
+    statements: [
+      `ALTER TABLE vehicles ADD COLUMN catalog_key TEXT`,
+      `ALTER TABLE vehicles ADD COLUMN toll_class INTEGER NOT NULL DEFAULT 1 CHECK (toll_class BETWEEN 1 AND 4)`,
+    ],
+  },
 ]
 
 export const LATEST_SCHEMA_VERSION = migrations[migrations.length - 1].version

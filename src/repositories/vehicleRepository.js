@@ -1,7 +1,7 @@
 import { nowIso, toBool, toNullableText, toNumberOrNull } from './rowMapping.js'
 
 const COLUMNS = `id, name, make, model, registration, year, fuel_type, tank_capacity,
-  current_odometer, is_default, created_at, updated_at`
+  current_odometer, is_default, catalog_key, toll_class, created_at, updated_at`
 
 export function mapVehicleRow(row) {
   if (!row) return null
@@ -16,6 +16,8 @@ export function mapVehicleRow(row) {
     tankCapacity: toNumberOrNull(row.tank_capacity),
     currentOdometer: toNumberOrNull(row.current_odometer) ?? 0,
     isDefault: toBool(row.is_default),
+    catalogKey: row.catalog_key ?? null,
+    tollClass: toNumberOrNull(row.toll_class) ?? 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -56,8 +58,8 @@ export function createVehicleRepository(executor) {
       const timestamp = nowIso()
       const { lastId } = await executor.run(
         `INSERT INTO vehicles (name, make, model, registration, year, fuel_type, tank_capacity,
-           current_odometer, is_default, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           current_odometer, is_default, catalog_key, toll_class, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           vehicle.name.trim(),
           toNullableText(vehicle.make),
@@ -68,6 +70,8 @@ export function createVehicleRepository(executor) {
           toNumberOrNull(vehicle.tankCapacity),
           toNumberOrNull(vehicle.currentOdometer) ?? 0,
           vehicle.isDefault ? 1 : 0,
+          toNullableText(vehicle.catalogKey),
+          vehicle.tollClass ?? 1,
           timestamp,
           timestamp,
         ],
@@ -78,7 +82,7 @@ export function createVehicleRepository(executor) {
     async update(id, vehicle) {
       await executor.run(
         `UPDATE vehicles SET name = ?, make = ?, model = ?, registration = ?, year = ?,
-           fuel_type = ?, tank_capacity = ?, current_odometer = ?, updated_at = ?
+           fuel_type = ?, tank_capacity = ?, current_odometer = ?, catalog_key = ?, toll_class = ?, updated_at = ?
          WHERE id = ?`,
         [
           vehicle.name.trim(),
@@ -89,6 +93,8 @@ export function createVehicleRepository(executor) {
           vehicle.fuelType,
           toNumberOrNull(vehicle.tankCapacity),
           toNumberOrNull(vehicle.currentOdometer) ?? 0,
+          toNullableText(vehicle.catalogKey),
+          vehicle.tollClass ?? 1,
           nowIso(),
           id,
         ],

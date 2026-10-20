@@ -1,5 +1,6 @@
 import { parseDecimal, roundTo } from './numberUtils.js'
 import { daysBetween, isValidIsoDate, toIsoDate } from './dateUtils.js'
+import { captureText } from './textCapture.js'
 
 /**
  * Reads litres, price per litre, total, date and station from the text of a fuel
@@ -203,35 +204,9 @@ export function parseSlip(recognised, { today = toIsoDate() } = {}) {
   return result
 }
 
-export class SlipScanError extends Error {}
 
-let slipScanner = null
-
-/**
- * Takes or picks a photo of a slip and reads it. Resolves to null when the user
- * cancels. Only available in the Android app.
- */
+/** Takes or picks a photo of a slip and reads it. Resolves to null when the user cancels. */
 export async function scanSlip({ today } = {}) {
-  const { Capacitor, registerPlugin } = await import('@capacitor/core')
-  if (!Capacitor.isNativePlatform()) throw new SlipScanError('Slip scanning works in the Android app.')
-  const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
-  let photo
-  try {
-    photo = await Camera.getPhoto({
-      source: CameraSource.Prompt,
-      resultType: CameraResultType.Uri,
-      quality: 90,
-      width: 2400,
-      correctOrientation: true,
-      promptLabelHeader: 'Scan fuel slip',
-      promptLabelPhoto: 'Choose from gallery',
-      promptLabelPicture: 'Take photo',
-    })
-  } catch (error) {
-    if (/cancel/i.test(error?.message || '')) return null
-    throw error
-  }
-  slipScanner ??= registerPlugin('SlipScanner')
-  const recognised = await slipScanner.recognize({ path: photo.path })
-  return parseSlip(recognised, { today })
+  const recognised = await captureText({ title: 'Scan fuel slip' })
+  return recognised ? parseSlip(recognised, { today }) : null
 }

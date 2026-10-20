@@ -76,7 +76,30 @@
               :error-text="errors.odometer"
               :helper-text="odometerHelper"
             />
+            <ion-button
+              v-if="canScan"
+              slot="end"
+              fill="clear"
+              class="odo-scan"
+              :disabled="readingOdometer"
+              aria-label="Read the odometer from a photo"
+              @click="scanOdo"
+            >
+              <ion-spinner v-if="readingOdometer" slot="icon-only" name="crescent" />
+              <ion-icon v-else slot="icon-only" :icon="cameraOutline" />
+            </ion-button>
           </ion-item>
+          <div v-if="odometerChoices.length > 1" class="odo-choices">
+            <span class="fb-muted">Not right? Try</span>
+            <ion-chip
+              v-for="km in odometerChoices.filter((k) => String(k) !== String(form.odometer))"
+              :key="km"
+              outline
+              @click="form.odometer = String(km)"
+            >
+              {{ formatDistance(km) }}
+            </ion-chip>
+          </div>
           <div v-if="warnings.odometer && !errors.odometer" class="fb-warning-text">{{ warnings.odometer }}</div>
 
           <ion-item>
@@ -166,9 +189,10 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   IonBackButton, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList,
-  IonPage, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
+  IonChip, IonPage, IonSelect, IonSelectOption, IonSpinner, IonTextarea, IonTitle, IonToggle, IonToolbar,
 } from '@ionic/vue'
-import { alertCircleOutline, carSportOutline, scanOutline, trashOutline } from 'ionicons/icons'
+import { alertCircleOutline, cameraOutline, carSportOutline, scanOutline, trashOutline } from 'ionicons/icons'
+import { scanOdometer } from '../services/odometerScanService.js'
 import { Capacitor } from '@capacitor/core'
 import { scanSlip } from '../services/slipScanService.js'
 import EmptyState from '../components/EmptyState.vue'
@@ -291,6 +315,30 @@ async function scan() {
     feedback.error(`Couldn't scan the slip: ${error.message}`)
   } finally {
     scanning.value = false
+  }
+}
+
+// Odometer from a photo of the dashboard; the user confirms or picks another number.
+const readingOdometer = ref(false)
+const odometerChoices = ref([])
+
+async function scanOdo() {
+  readingOdometer.value = true
+  try {
+    const lastOdometer = Math.max(lastEntry.value?.odometer ?? 0, selectedVehicle.value?.currentOdometer ?? 0) || null
+    const result = await scanOdometer({ lastOdometer })
+    if (!result) return
+    if (result.best === null) {
+      feedback.error("Couldn't find the odometer reading. Try a closer, sharper photo of the display.")
+      return
+    }
+    form.odometer = String(result.best)
+    odometerChoices.value = result.candidates
+    feedback.toast(`Odometer ${formatDistance(result.best)}. Please check it.`, 'success', 2500)
+  } catch (error) {
+    feedback.error(`Couldn't read the photo: ${error.message}`)
+  } finally {
+    readingOdometer.value = false
   }
 }
 
@@ -425,6 +473,18 @@ async function remove() {
   font-size: 0.78rem;
   margin: 2px 0 0;
   white-space: normal;
+}
+.odo-scan {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.odo-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 0 16px;
+  font-size: 0.8rem;
 }
 .scan {
   padding: 12px 16px 4px;

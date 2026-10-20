@@ -52,6 +52,22 @@
             tank closes the period.
           </p>
 
+          <ConsumptionCompareCard v-if="comparisonWithRated" :result="comparisonWithRated" :entry="ratedEntry" />
+          <ion-item
+            v-else-if="stats.hasEnoughData && !ratedEntry && activeVehicle.make"
+            button
+            detail
+            lines="none"
+            class="costs-link"
+            :router-link="`/vehicles/${activeVehicle.id}/edit`"
+          >
+            <ion-icon slot="start" :icon="speedometerOutline" aria-hidden="true" />
+            <ion-label class="ion-text-wrap">
+              Compare with the official figure
+              <p>Choose your model and engine on the vehicle to see how your consumption compares.</p>
+            </ion-label>
+          </ion-item>
+
           <div class="fb-section pro-heading">
             <h2 class="fb-section-title">Advanced statistics</h2>
             <ion-badge v-if="!hasPro" color="secondary">Pro</ion-badge>
@@ -191,7 +207,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { IonBadge, IonButton, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonSpinner, IonTitle, IonToolbar } from '@ionic/vue'
-import { lockClosedOutline, receiptOutline, statsChartOutline, waterOutline } from 'ionicons/icons'
+import { lockClosedOutline, receiptOutline, speedometerOutline, statsChartOutline, waterOutline } from 'ionicons/icons'
+import ConsumptionCompareCard from '../components/ConsumptionCompareCard.vue'
+import { compareWithRated, suggestTank } from '../services/vehicleCatalog.js'
 import { costOfDriving } from '../services/expenseService.js'
 import EmptyState from '../components/EmptyState.vue'
 import StatTile from '../components/StatTile.vue'
@@ -215,6 +233,14 @@ const entries = ref([])
 const comparison = ref([])
 const expenses = ref([])
 const trips = ref([])
+// The official consumption figure for this vehicle, when it matches the built-in catalogue.
+const ratedEntry = computed(() => {
+  const v = activeVehicle.value
+  return v ? suggestTank(v)?.entry ?? null : null
+})
+const comparisonWithRated = computed(() =>
+  stats.value.hasEnoughData && ratedEntry.value ? compareWithRated(stats.value.averageConsumption, ratedEntry.value) : null,
+)
 const cost = computed(() => costOfDriving({ entries: entries.value, expenses: expenses.value, trips: trips.value }))
 
 const stats = computed(() => computeVehicleStatistics(entries.value))

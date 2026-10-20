@@ -31,28 +31,43 @@
             />
           </ion-item>
           <ion-item>
-            <ion-input
+            <SuggestInput
               v-model="form.make"
               label="Make"
-              label-placement="stacked"
               placeholder="e.g. Volkswagen"
-              autocapitalize="words"
+              :suggestions="makeList"
               :maxlength="LIMITS.makeModelLength"
-              :class="fieldClass('make')"
+              :input-class="fieldClass('make')"
               :error-text="errors.make"
+              @update:model-value="form.catalogKey = null"
             />
           </ion-item>
           <ion-item>
-            <ion-input
+            <SuggestInput
               v-model="form.model"
               label="Model"
-              label-placement="stacked"
               placeholder="e.g. Polo Vivo"
-              autocapitalize="words"
+              :suggestions="modelList"
               :maxlength="LIMITS.makeModelLength"
-              :class="fieldClass('model')"
+              :input-class="fieldClass('model')"
               :error-text="errors.model"
+              @update:model-value="form.catalogKey = null"
+              @chosen="onModelChosen"
             />
+          </ion-item>
+          <ion-item v-if="variants.length > 1">
+            <ion-select
+              :value="form.catalogKey"
+              label="Engine"
+              label-placement="stacked"
+              interface="action-sheet"
+              placeholder="Choose the engine (fills in the tank size)"
+              @ion-change="(e) => chooseVariant(e.detail.value)"
+            >
+              <ion-select-option v-for="v in variants" :key="v.key" :value="v.key">
+                {{ v.variant }}{{ v.years ? ` (${v.years})` : '' }}
+              </ion-select-option>
+            </ion-select>
           </ion-item>
           <ion-item>
             <ion-input
@@ -89,11 +104,15 @@
               label-placement="stacked"
               inputmode="decimal"
               placeholder="e.g. 45"
-              helper-text="Optional. Used to check fill-ups and trip planning."
+              :helper-text="tankHelper"
               :class="fieldClass('tankCapacity')"
               :error-text="errors.tankCapacity"
             />
           </ion-item>
+          <div v-if="tankSuggestion" class="tank-hint">
+            <span class="fb-muted">{{ tankSuggestion.text }}</span>
+            <ion-button size="small" fill="clear" @click="useSuggestedTank">Use {{ tankSuggestion.litres }} L</ion-button>
+          </div>
           <ion-item>
             <ion-input
               v-model="form.currentOdometer"
@@ -104,6 +123,14 @@
               :class="fieldClass('currentOdometer')"
               :error-text="errors.currentOdometer"
             />
+          </ion-item>
+          <ion-item>
+            <ion-select v-model="form.tollClass" label="Toll class" label-placement="stacked" interface="action-sheet">
+              <ion-select-option :value="1">Class 1: cars, bakkies, minibuses (2 axles)</ion-select-option>
+              <ion-select-option :value="2">Class 2: medium heavy (2 axles, dual wheels)</ion-select-option>
+              <ion-select-option :value="3">Class 3: large heavy (3–4 axles)</ion-select-option>
+              <ion-select-option :value="4">Class 4: extra-large heavy (5+ axles)</ion-select-option>
+            </ion-select>
           </ion-item>
           <ion-item v-if="showDefaultToggle">
             <ion-toggle v-model="form.isDefault" justify="space-between">Default vehicle</ion-toggle>
@@ -130,6 +157,9 @@ import {
 } from '@ionic/vue'
 import { alertCircleOutline } from 'ionicons/icons'
 import EmptyState from '../components/EmptyState.vue'
+import SuggestInput from '../components/SuggestInput.vue'
+import { findByKey, makes, modelsFor, suggestTank, variantsFor } from '../services/vehicleCatalog.js'
+import { parseDecimal } from '../services/numberUtils.js'
 import { notifyDataChanged, setActiveVehicle, useAppStore } from '../stores/appStore.js'
 import { advanceOnEnter } from '../composables/useEnterToAdvance.js'
 import { useServices } from '../services/appServices.js'
@@ -160,7 +190,47 @@ const form = reactive({
   tankCapacity: '',
   currentOdometer: '',
   isDefault: false,
+  catalogKey: null,
+  tollClass: 1,
 })
+
+// Make/model suggestions and tank size from the built-in vehicle catalogue.
+const makeList = makes()
+const modelList = computed(() => modelsFor(form.make))
+const variants = computed(() => variantsFor(form.make, form.model))
+const suggestion = computed(() => suggestTank(form))
+
+const tankSuggestion = computed(() => {
+  const s = suggestion.value
+  if (!s?.tankLitres || parseDecimal(form.tankCapacity) === s.tankLitres) return null
+  const what = s.entry ? `${s.entry.model} ${s.entry.variant}` : form.model
+  return { litres: s.tankLitres, text: `${s.certain ? 'The' : 'A typical'} ${what} has a ${s.tankLitres} L tank.` }
+})
+const tankHelper = computed(() =>
+  variants.value.length > 1 && !form.catalogKey && !suggestion.value?.tankLitres
+    ? 'Choose the engine above to fill this in, or check your manual.'
+    : 'Optional. Used to estimate your range and to check fill-ups.',
+)
+
+function useSuggestedTank() {
+  form.tankCapacity = String(tankSuggestion.value.litres)
+  if (suggestion.value.entry) form.catalogKey = suggestion.value.entry.key
+}
+
+function chooseVariant(key) {
+  const v = findByKey(key)
+  if (!v) return
+  form.catalogKey = key
+  if (v.tankLitres) form.tankCapacity = String(v.tankLitres)
+  if (v.fuelType) form.fuelType = v.fuelType
+}
+
+function onModelChosen() {
+  // One engine: take it straight away. Several: the Engine picker appears.
+  const list = variants.value
+  if (list.length === 1) chooseVariant(list[0].key)
+  else if (!form.tankCapacity && suggestion.value?.certain && suggestion.value.tankLitres) form.tankCapacity = String(suggestion.value.tankLitres)
+}
 
 // The first vehicle is always the default; an existing default stays default
 // until another vehicle is made default.
@@ -186,6 +256,8 @@ onMounted(async () => {
         tankCapacity: toInputValue(v.tankCapacity),
         currentOdometer: toInputValue(v.currentOdometer),
         isDefault: v.isDefault,
+        catalogKey: v.catalogKey,
+        tollClass: v.tollClass ?? 1,
       })
     }
   }
@@ -213,3 +285,14 @@ async function save() {
   }
 }
 </script>
+
+<style scoped>
+.tank-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 8px 0 16px;
+  font-size: 0.8rem;
+}
+</style>
