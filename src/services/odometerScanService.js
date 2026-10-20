@@ -23,8 +23,8 @@ function numbersIn(text) {
   const cleaned = String(text)
     .replace(/\b\d{1,2}:\d{2}\b/g, ' ') // clock
     .replace(/\b\d+[.,]\d\b(?!\d)/g, ' ') // one decimal: trip meters (123.4)
-  for (const m of cleaned.matchAll(/\d{1,3}(?:(?:[ 00a0]{1,3}|[.,])\d{3})+|\d+/g)) {
-    const value = Number(m[0].replace(/[ .,00a0]/g, ''))
+  for (const m of cleaned.matchAll(/\d{1,3}(?:(?:[ \u00a0]{1,3}|[.,])\d{3})+|\d+/g)) {
+    const value = Number(m[0].replace(/[ .,\u00a0]/g, ''))
     if (Number.isFinite(value)) found.push({ value, digits: m[0].replace(/\D/g, '').length })
   }
   return found
